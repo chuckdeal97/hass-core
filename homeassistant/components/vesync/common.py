@@ -7,8 +7,6 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from pyvesync.vesyncfan import humid_features
 
-from pyvesync.vesyncfan import humid_features
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 
@@ -24,8 +22,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 _HUMIDIFIER_MODELS = set(
-    chain(*[features["models"] for features in humid_features.values()])
-)
+    chain(*[features["models"] for features in humid_features.values()]),
+).union(set(humid_features.keys()))
 
 
 def is_humidifier(device_type: str) -> bool:
@@ -52,13 +50,13 @@ async def async_process_devices(hass, manager):
                 devices[VS_HUMIDIFIERS].append(fan)
                 devices[VS_NUMBERS].append(fan)  # for night light and mist level
                 devices[VS_SWITCHES].append(fan)  # for automatic stop and display
-                devices[VS_SENSORS].append(fan)  # for humidity sensor
                 if fan.night_light:
                     devices[VS_LIGHTS].append(fan)  # for night light
             else:
                 devices[VS_FANS].append(fan)
-                devices[VS_SENSORS].append(fan)
-        _LOGGER.info("%d VeSync fans found", len(manager.fans))
+            devices[VS_SENSORS].append(fan)
+        _LOGGER.info("%d VeSync fans found", len(devices[VS_FANS]))
+        _LOGGER.info("%d VeSync humidifiers found", len(devices[VS_HUMIDIFIERS]))
 
     if manager.bulbs:
         devices[VS_LIGHTS].extend(manager.bulbs)
@@ -84,6 +82,7 @@ async def async_process_devices(hass, manager):
 class VeSyncBaseEntity(Entity):
     """Base class for VeSync Entity Representations."""
 
+    device: VeSyncBaseDevice
     _attr_has_entity_name = True
 
     def __init__(self, device: VeSyncBaseDevice) -> None:

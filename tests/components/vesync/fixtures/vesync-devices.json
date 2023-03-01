@@ -12,6 +12,16 @@
         "uuid": "00000000-1111-2222-3333-444444444444"
       },
       {
+        "cid": "300s-humidifier",
+        "deviceType": "LUH-A601S-WUSB",
+        "deviceName": "Humidifier 300s",
+        "subDeviceNo": null,
+        "deviceImg": "https://image.vesync.com/defaultImages/LV_600S_Series/icon_lv600s_humidifier_160.png",
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-444444444444"
+      },
+      {
         "cid": "600s-humidifier",
         "deviceType": "LUH-A602S-WUS",
         "deviceName": "Humidifier 600S",
@@ -71,6 +81,14 @@
         "cid": "tunable-bulb",
         "deviceType": "ESL100CW",
         "deviceName": "Temperature Light",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online"
+      },
+      {
+        "cid": "multicolor-bulb",
+        "deviceType": "ESL100MC",
+        "deviceName": "Multicolor Light",
         "subDeviceNo": null,
         "deviceStatus": "on",
         "connectionStatus": "online"
