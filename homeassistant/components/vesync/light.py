@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import DEVICE_HELPER, VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .common import DEVICE_HELPER, VeSyncDevice, get_domain_data
+from .const import DEV_TYPE_TO_HA, VS_DISCOVERY, VS_LIGHTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,35 +28,28 @@ async def async_setup_entry(
     """Set up lights."""
 
     @callback
-    def discover(devices):
+    def discover(devices: list):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        entities: list[LightEntity] = []
+        for dev in devices:
+            if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
+                entities.append(VeSyncDimmableLightHA(dev))
+            elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
+                entities.append(VeSyncTunableWhiteLightHA(dev))
+            elif hasattr(dev, "night_light") and dev.night_light:
+                entities.append(VeSyncNightLightHA(dev))
+            else:
+                _LOGGER.debug(
+                    "%s - Unknown device type - %s", dev.device_name, dev.device_type
+                )
+
+        async_add_entities(entities, update_before_add=True)
+
+    discover(get_domain_data(hass, config_entry, VS_LIGHTS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_LIGHTS), discover)
     )
-
-    _setup_entities(hass.data[DOMAIN][VS_LIGHTS], async_add_entities)
-
-
-@callback
-def _setup_entities(devices, async_add_entities):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
-            entities.append(VeSyncDimmableLightHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
-            entities.append(VeSyncTunableWhiteLightHA(dev))
-        elif hasattr(dev, "night_light") and dev.night_light:
-            entities.append(VeSyncNightLightHA(dev))
-        else:
-            _LOGGER.debug(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
-
-    async_add_entities(entities, update_before_add=True)
 
 
 def _vesync_brightness_to_ha(vesync_brightness):

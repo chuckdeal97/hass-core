@@ -12,8 +12,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import VeSyncBaseEntity, VeSyncDevice, VeSyncEntityDescriptionFactory
-from .const import DOMAIN, VS_DISCOVERY, VS_NUMBERS
+from .common import (
+    VeSyncBaseEntity,
+    VeSyncDevice,
+    VeSyncEntityDescriptionFactory,
+    get_domain_data,
+)
+from .const import VS_DISCOVERY, VS_NUMBERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +95,7 @@ async def async_setup_entry(
 
         async_add_entities(entities, update_before_add=True)
 
-    discover(hass.data[DOMAIN][VS_NUMBERS])
+    discover(get_domain_data(hass, config_entry, VS_NUMBERS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_NUMBERS), discover)

@@ -11,6 +11,7 @@ from homeassistant.components.vesync import (
     _async_new_device_discovery,
     _async_process_devices,
     async_setup_entry,
+    async_unload_entry,
 )
 from homeassistant.components.vesync.const import (
     DOMAIN,
@@ -41,8 +42,6 @@ async def test_async_setup_entry__not_login(
     manager.login = Mock(return_value=False)
 
     with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ) as setup_mock, patch(
         "homeassistant.components.vesync._async_process_devices"
@@ -51,7 +50,6 @@ async def test_async_setup_entry__not_login(
     ) as register_mock:
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
-        assert setups_mock.call_count == 0
         assert setup_mock.call_count == 0
         assert process_mock.call_count == 0
         assert register_mock.call_count == 0
@@ -65,27 +63,20 @@ async def test_async_setup_entry__no_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
 ) -> None:
     """Test setup connects to vesync and creates empty config when no devices."""
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ) as setup_mock:
+    with patch.object(hass.config_entries, "async_forward_entry_setup") as setup_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert setups_mock.call_count == 1
-        assert setups_mock.call_args.args[0] == config_entry
-        assert setups_mock.call_args.args[1] == []
         assert setup_mock.call_count == 0
 
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_FANS]
-    assert not hass.data[DOMAIN][VS_HUMIDIFIERS]
-    assert not hass.data[DOMAIN][VS_LIGHTS]
-    assert not hass.data[DOMAIN][VS_NUMBERS]
-    assert not hass.data[DOMAIN][VS_SENSORS]
-    assert not hass.data[DOMAIN][VS_SWITCHES]
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] == manager
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_FANS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]
 
 
 async def test_async_setup_entry__with_devices(
@@ -100,8 +91,8 @@ async def test_async_setup_entry__with_devices(
         "async_add_executor_job",
         new=AsyncMock(),
     ) as mock_add_executor_job, patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as setup_mock, patch.object(
         hass.services, "async_register"
     ) as register_mock, patch(
         "homeassistant.components.vesync.common.humid_features"
@@ -118,30 +109,27 @@ async def test_async_setup_entry__with_devices(
             call(manager_devices.login),
             call(manager_devices.update),
         ]
-        assert setups_mock.call_count == 1
-        assert setups_mock.call_args.args[0] == config_entry
-        assert list(setups_mock.call_args.args[1]) == [
-            Platform.SWITCH,
-            Platform.FAN,
-            Platform.HUMIDIFIER,
-            Platform.LIGHT,
-            Platform.SENSOR,
-            Platform.NUMBER,
-            Platform.BINARY_SENSOR,
-        ]
+        assert setup_mock.call_count == 7
+        assert setup_mock.mock_calls[0] == call(config_entry, Platform.SWITCH)
+        assert setup_mock.mock_calls[1] == call(config_entry, Platform.FAN)
+        assert setup_mock.mock_calls[2] == call(config_entry, Platform.LIGHT)
+        assert setup_mock.mock_calls[3] == call(config_entry, Platform.SENSOR)
+        assert setup_mock.mock_calls[4] == call(config_entry, Platform.HUMIDIFIER)
+        assert setup_mock.mock_calls[5] == call(config_entry, Platform.NUMBER)
+        assert setup_mock.mock_calls[6] == call(config_entry, Platform.BINARY_SENSOR)
         assert register_mock.call_count == 1
         assert register_mock.call_args.args[0] == DOMAIN
         assert register_mock.call_args.args[1] == SERVICE_UPDATE_DEVS
         assert callable(register_mock.call_args.args[2])
 
-    assert hass.data[DOMAIN][VS_MANAGER] == manager_devices
-    assert len(hass.data[DOMAIN][VS_BINARY_SENSORS]) == 3
-    assert len(hass.data[DOMAIN][VS_FANS]) == 1
-    assert len(hass.data[DOMAIN][VS_HUMIDIFIERS]) == 2
-    assert len(hass.data[DOMAIN][VS_LIGHTS]) == 5
-    assert len(hass.data[DOMAIN][VS_NUMBERS]) == 3
-    assert len(hass.data[DOMAIN][VS_SENSORS]) == 4
-    assert len(hass.data[DOMAIN][VS_SWITCHES]) == 5
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] == manager_devices
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS]) == 3
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_FANS]) == 1
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS]) == 2
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]) == 5
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS]) == 3
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]) == 4
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]) == 5
 
 
 async def test_asynch_setup_entry__loaded_state(
@@ -312,15 +300,15 @@ async def test_async_new_device_discovery__no_devices(
     """Test when manager with no devices is discovered."""
     manager = MagicMock()
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-    hass.data[DOMAIN][VS_BINARY_SENSORS]: list = []
-    hass.data[DOMAIN][VS_FANS]: list = []
-    hass.data[DOMAIN][VS_HUMIDIFIERS]: list = []
-    hass.data[DOMAIN][VS_LIGHTS]: list = []
-    hass.data[DOMAIN][VS_NUMBERS]: list = []
-    hass.data[DOMAIN][VS_SENSORS]: list = []
-    hass.data[DOMAIN][VS_SWITCHES]: list = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
+    hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]: list = []
 
     mock_forward_setup = Mock()
     mock_service = Mock()
@@ -377,15 +365,15 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
     light.is_dimmable.return_value = True
     manager.switches = [switch, light]
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-    hass.data[DOMAIN][VS_BINARY_SENSORS]: list = []
-    hass.data[DOMAIN][VS_FANS]: list = []
-    hass.data[DOMAIN][VS_HUMIDIFIERS]: list = []
-    hass.data[DOMAIN][VS_LIGHTS]: list = []
-    hass.data[DOMAIN][VS_NUMBERS]: list = []
-    hass.data[DOMAIN][VS_SENSORS]: list = []
-    hass.data[DOMAIN][VS_SWITCHES]: list = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
+    hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]: list = []
 
     mock_forward_setup = Mock()
     mock_service = Mock()
@@ -414,27 +402,31 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
                 call(config_entry, Platform.SWITCH),
                 call(config_entry, Platform.FAN),
                 call(config_entry, Platform.LIGHT),
+                call(config_entry, Platform.SENSOR),
                 call(config_entry, Platform.HUMIDIFIER),
                 call(config_entry, Platform.NUMBER),
-                call(config_entry, Platform.SENSOR),
                 call(config_entry, Platform.BINARY_SENSOR),
             ]
         )
         mock_service.assert_not_called()
 
-    assert hass.data[DOMAIN][VS_BINARY_SENSORS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS] == unordered(
         [fan, humidifier1, humidifier2]
     )
-    assert hass.data[DOMAIN][VS_FANS] == unordered([fan])
-    assert hass.data[DOMAIN][VS_HUMIDIFIERS] == unordered([humidifier1, humidifier2])
-    assert hass.data[DOMAIN][VS_LIGHTS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_FANS] == unordered([fan])
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS] == unordered(
+        [humidifier1, humidifier2]
+    )
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS] == unordered(
         [fan, humidifier1, humidifier2, bulb, light]
     )
-    assert hass.data[DOMAIN][VS_NUMBERS] == unordered([fan, humidifier1, humidifier2])
-    assert hass.data[DOMAIN][VS_SENSORS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS] == unordered(
+        [fan, humidifier1, humidifier2]
+    )
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS] == unordered(
         [fan, humidifier1, humidifier2, outlet]
     )
-    assert hass.data[DOMAIN][VS_SWITCHES] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES] == unordered(
         [fan, humidifier1, humidifier2, outlet, switch]
     )
 
@@ -488,15 +480,15 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
     light2.is_dimmable.return_value = True
     manager.switches = [switch, light]
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-    hass.data[DOMAIN][VS_BINARY_SENSORS]: list = [humidifier3]
-    hass.data[DOMAIN][VS_FANS]: list = [fan2]
-    hass.data[DOMAIN][VS_HUMIDIFIERS]: list = [humidifier3]
-    hass.data[DOMAIN][VS_LIGHTS]: list = [bulb2, light2]
-    hass.data[DOMAIN][VS_NUMBERS]: list = [humidifier3]
-    hass.data[DOMAIN][VS_SENSORS]: list = [outlet2]
-    hass.data[DOMAIN][VS_SWITCHES]: list = [switch2]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
+    hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS]: list = [humidifier3]
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS]: list = [fan2]
+    hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS]: list = [humidifier3]
+    hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]: list = [bulb2, light2]
+    hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS]: list = [humidifier3]
+    hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]: list = [outlet2]
+    hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]: list = [switch2]
 
     mock_forward_setup = Mock()
     mock_service = Mock()
@@ -532,15 +524,15 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
             unordered([fan, humidifier1, humidifier2, bulb, light]),
         )
         assert mock_dispatcher_send.mock_calls[3] == call(
-            hass, "vesync_discovery_humidifiers", unordered([humidifier1, humidifier2])
-        )
-        assert mock_dispatcher_send.mock_calls[4] == call(
-            hass, "vesync_discovery_numbers", unordered([fan, humidifier1, humidifier2])
-        )
-        assert mock_dispatcher_send.mock_calls[5] == call(
             hass,
             "vesync_discovery_sensors",
             unordered([fan, humidifier1, humidifier2, outlet]),
+        )
+        assert mock_dispatcher_send.mock_calls[4] == call(
+            hass, "vesync_discovery_humidifiers", unordered([humidifier1, humidifier2])
+        )
+        assert mock_dispatcher_send.mock_calls[5] == call(
+            hass, "vesync_discovery_numbers", unordered([fan, humidifier1, humidifier2])
         )
         assert mock_dispatcher_send.mock_calls[6] == call(
             hass,
@@ -551,24 +543,24 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
         assert mock_forward_setup.call_count == 0
         mock_service.assert_not_called()
 
-    assert hass.data[DOMAIN][VS_BINARY_SENSORS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS] == unordered(
         [fan, humidifier1, humidifier2, humidifier3]
     )
-    assert hass.data[DOMAIN][VS_FANS] == unordered([fan, fan2])
-    assert hass.data[DOMAIN][VS_HUMIDIFIERS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_FANS] == unordered([fan, fan2])
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS] == unordered(
         [humidifier1, humidifier2, humidifier3]
     )
-    assert hass.data[DOMAIN][VS_LIGHTS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS] == unordered(
         [fan, humidifier1, humidifier2, bulb, bulb2, light, light2]
     )
 
-    assert hass.data[DOMAIN][VS_NUMBERS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_NUMBERS] == unordered(
         [fan, humidifier1, humidifier2, humidifier3]
     )
-    assert hass.data[DOMAIN][VS_SENSORS] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS] == unordered(
         [fan, humidifier1, humidifier2, outlet, outlet2]
     )
-    assert hass.data[DOMAIN][VS_SWITCHES] == unordered(
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES] == unordered(
         [
             fan,
             humidifier1,
@@ -584,3 +576,61 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
     assert caplog.messages[2] == "1 VeSync lights found"
     assert caplog.messages[3] == "1 VeSync outlets found"
     assert caplog.messages[4] == "2 VeSync switches found"
+
+
+async def test_async_unload_entry__not_ok(hass: HomeAssistant, config_entry) -> None:
+    """Test async_unload_entry when unload not ok."""
+    hass.data[DOMAIN] = {config_entry.entry_id: {"stuff": "more stuff"}}
+    assert DOMAIN in hass.data
+    assert config_entry.entry_id in hass.data[DOMAIN]
+
+    with patch.object(hass.config_entries, "async_unload_platforms") as unload_mock:
+        unload_mock.return_value = False
+
+        assert not await async_unload_entry(hass, config_entry)
+        await hass.async_block_till_done()
+
+        assert unload_mock.call_count == 1
+        assert unload_mock.mock_calls[0] == call(
+            config_entry,
+            [
+                Platform.SWITCH,
+                Platform.FAN,
+                Platform.LIGHT,
+                Platform.SENSOR,
+                Platform.HUMIDIFIER,
+                Platform.NUMBER,
+                Platform.BINARY_SENSOR,
+            ],
+        )
+    assert DOMAIN in hass.data
+    assert config_entry.entry_id in hass.data[DOMAIN]
+
+
+async def test_async_unload_entry__ok(hass: HomeAssistant, config_entry) -> None:
+    """Test async_unload_entry when unload ok."""
+    hass.data[DOMAIN] = {config_entry.entry_id: {"stuff": "more stuff"}}
+    assert DOMAIN in hass.data
+    assert config_entry.entry_id in hass.data[DOMAIN]
+
+    with patch.object(hass.config_entries, "async_unload_platforms") as unload_mock:
+        unload_mock.return_value = True
+
+        assert await async_unload_entry(hass, config_entry)
+        await hass.async_block_till_done()
+
+        assert unload_mock.call_count == 1
+        assert unload_mock.mock_calls[0] == call(
+            config_entry,
+            [
+                Platform.SWITCH,
+                Platform.FAN,
+                Platform.LIGHT,
+                Platform.SENSOR,
+                Platform.HUMIDIFIER,
+                Platform.NUMBER,
+                Platform.BINARY_SENSOR,
+            ],
+        )
+    assert DOMAIN in hass.data
+    assert config_entry.entry_id not in hass.data[DOMAIN]

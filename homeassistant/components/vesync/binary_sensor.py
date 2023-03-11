@@ -20,8 +20,9 @@ from .common import (
     VeSyncBaseEntity,
     VeSyncDevice,
     VeSyncEntityDescriptionFactory,
+    get_domain_data,
 )
-from .const import DOMAIN, VS_BINARY_SENSORS, VS_DISCOVERY
+from .const import VS_BINARY_SENSORS, VS_DISCOVERY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,7 +142,7 @@ async def async_setup_entry(
 
         async_add_entities(entities, update_before_add=True)
 
-    discover(hass.data[DOMAIN][VS_BINARY_SENSORS])
+    discover(get_domain_data(hass, config_entry, VS_BINARY_SENSORS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_BINARY_SENSORS), discover)

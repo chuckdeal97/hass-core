@@ -20,8 +20,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import DEVICE_HELPER, VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_HUMIDIFIERS
+from .common import DEVICE_HELPER, VeSyncDevice, get_domain_data
+from .const import VS_DISCOVERY, VS_HUMIDIFIERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ async def async_setup_entry(
 
         async_add_entities(entities, update_before_add=True)
 
-    discover(hass.data[DOMAIN][VS_HUMIDIFIERS])
+    discover(get_domain_data(hass, config_entry, VS_HUMIDIFIERS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_HUMIDIFIERS), discover)

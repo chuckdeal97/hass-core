@@ -6,11 +6,10 @@ import pytest
 from pyvesync.vesyncfan import VeSyncAirBypass
 
 from homeassistant.components.fan import FanEntityFeature
+from homeassistant.components.vesync import DOMAIN, VS_FANS
 from homeassistant.components.vesync.fan import (
-    DOMAIN,
     FAN_MODE_AUTO,
     FAN_MODE_SLEEP,
-    VS_FANS,
     VeSyncFanHA,
     async_setup_entry,
 )
@@ -29,8 +28,8 @@ async def test_async_setup_entry(
 
     callback = AsyncMock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_FANS] = [fan]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS] = [fan]
     with patch.object(config_entry, "async_on_unload") as mock_on_unload:
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
@@ -51,8 +50,8 @@ async def test_async_setup_entry__empty(
 
     callback = AsyncMock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_FANS] = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS] = []
     with patch.object(config_entry, "async_on_unload") as mock_on_unload:
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
@@ -76,8 +75,8 @@ async def test_async_setup_entry__invalid(
 
     callback = AsyncMock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_FANS] = [mock_fan]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS] = [mock_fan]
     with patch.object(config_entry, "async_on_unload") as mock_on_unload:
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()

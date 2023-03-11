@@ -18,8 +18,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .common import VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
+from .common import VeSyncDevice, get_domain_data
+from .const import DEV_TYPE_TO_HA, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_FANS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ async def async_setup_entry(
 
         async_add_entities(entities, update_before_add=True)
 
-    discover(hass.data[DOMAIN][VS_FANS])
+    discover(get_domain_data(hass, config_entry, VS_FANS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)

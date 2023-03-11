@@ -12,11 +12,10 @@ from homeassistant.components.humidifier import (
     HumidifierDeviceClass,
     HumidifierEntityFeature,
 )
+from homeassistant.components.vesync import DOMAIN, VS_HUMIDIFIERS
 from homeassistant.components.vesync.humidifier import (
-    DOMAIN,
     MAX_HUMIDITY,
     MIN_HUMIDITY,
-    VS_HUMIDIFIERS,
     VeSyncHumidifierEntityDescription,
     VeSyncHumidifierHA,
     async_setup_entry,
@@ -38,8 +37,11 @@ async def test_async_setup_entry(
 
     callback = AsyncMock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_HUMIDIFIERS] = [humidifier, humidifier_nightlight]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS] = [
+        humidifier,
+        humidifier_nightlight,
+    ]
     with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:
@@ -66,8 +68,8 @@ async def test_async_setup_entry__empty(
 
     callback = AsyncMock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_HUMIDIFIERS] = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS] = []
     with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:
@@ -96,8 +98,8 @@ async def test_async_setup_entry__invalid(
 
     callback = AsyncMock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_HUMIDIFIERS] = [mock_humidifier]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_HUMIDIFIERS] = [mock_humidifier]
     with patch.object(config_entry, "async_on_unload") as mock_on_unload, patch(
         "homeassistant.components.vesync.common.humid_features"
     ) as mock_features:

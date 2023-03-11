@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import DEVICE_HELPER, VeSyncBaseEntity, VeSyncDevice
-from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_SWITCHES
+from .common import DEVICE_HELPER, VeSyncBaseEntity, VeSyncDevice, get_domain_data
+from .const import DEV_TYPE_TO_HA, VS_DISCOVERY, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,36 +23,30 @@ async def async_setup_entry(
     """Set up switches."""
 
     @callback
-    def discover(devices):
+    def discover(devices: list):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        entities: list[SwitchEntity] = []
+        for dev in devices:
+            if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
+                entities.append(VeSyncSwitchHA(dev))
+            elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
+                entities.append(VeSyncLightSwitch(dev))
+            elif DEVICE_HELPER.is_humidifier(dev.device_type):
+                entities.append(VeSyncHumidifierDisplayHA(dev))
+                entities.append(VeSyncHumidifierAutomaticStopHA(dev))
+            else:
+                _LOGGER.warning(
+                    "%s - Unknown device type - %s", dev.device_name, dev.device_type
+                )
+                continue
+
+        async_add_entities(entities, update_before_add=True)
+
+    discover(get_domain_data(hass, config_entry, VS_SWITCHES))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SWITCHES), discover)
     )
-
-    _setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities)
-
-
-@callback
-def _setup_entities(devices, async_add_entities):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
-            entities.append(VeSyncSwitchHA(dev))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
-            entities.append(VeSyncLightSwitch(dev))
-        elif DEVICE_HELPER.is_humidifier(dev.device_type):
-            entities.append(VeSyncHumidifierDisplayHA(dev))
-            entities.append(VeSyncHumidifierAutomaticStopHA(dev))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
-
-    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):

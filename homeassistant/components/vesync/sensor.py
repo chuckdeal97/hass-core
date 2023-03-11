@@ -28,8 +28,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import VeSyncBaseEntity
-from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
+from .common import VeSyncBaseEntity, get_domain_data
+from .const import DEV_TYPE_TO_HA, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,27 +177,26 @@ async def async_setup_entry(
     """Set up switches."""
 
     @callback
-    def discover(devices):
+    def discover(devices: list):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        entities = []
+        for dev in devices:
+            for description in SENSORS:
+                if description.exists_fn(dev):
+                    entities.append(VeSyncSensorEntity(dev, description))
+
+        async_add_entities(entities, update_before_add=True)
+
+    discover(get_domain_data(hass, config_entry, VS_SENSORS))
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_SENSORS], async_add_entities)
-
 
 @callback
 def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        for description in SENSORS:
-            if description.exists_fn(dev):
-                entities.append(VeSyncSensorEntity(dev, description))
-
-    async_add_entities(entities, update_before_add=True)
 
 
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):

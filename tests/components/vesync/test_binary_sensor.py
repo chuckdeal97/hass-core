@@ -3,9 +3,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.vesync import DOMAIN, VS_BINARY_SENSORS
 from homeassistant.components.vesync.binary_sensor import (
-    DOMAIN,
-    VS_BINARY_SENSORS,
     EmptyWaterTankEntityDescriptionFactory,
     HighHumidityEntityDescriptionFactory,
     VeSyncBinarySensorEntity,
@@ -28,8 +27,8 @@ async def test_async_setup_entry(
     """Test the discovery mechanism can handle supported devices."""
     callback = Mock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_BINARY_SENSORS] = [humidifier]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS] = [humidifier]
     with patch.object(config_entry, "async_on_unload") as mock_on_unload:
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
@@ -50,8 +49,8 @@ async def test_async_setup_entry__empty(
     """Test the discovery mechanism can handle no devices."""
     callback = Mock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_BINARY_SENSORS] = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS] = []
     with patch.object(config_entry, "async_on_unload") as mock_on_unload:
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
@@ -75,8 +74,8 @@ async def test_async_setup_entry__invalid(
 
     callback = Mock(AddEntitiesCallback)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_BINARY_SENSORS] = [mock_humidifier]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_BINARY_SENSORS] = [mock_humidifier]
     with patch.object(config_entry, "async_on_unload") as mock_on_unload:
         await async_setup_entry(hass, config_entry, callback)
         await hass.async_block_till_done()
