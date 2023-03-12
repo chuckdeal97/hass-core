@@ -7,8 +7,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import load_fixture
 
-HUMIDIFIER_MODEL = "HUMIDIFIER_MODEL"
+DIM_SWITCH_MODEL = "DIM_SWITCH_MODEL"
 FAN_MODEL = "FAN_MODEL"
+HUMIDIFIER_MODEL = "HUMIDIFIER_MODEL"
+OUTLET_MODEL = "OUTLET_MODEL"
+SWITCH_MODEL = "SWITCH_MODEL"
 
 
 def get_entities(hass: HomeAssistant, identifier: str) -> list:

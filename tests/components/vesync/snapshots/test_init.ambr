@@ -92,6 +92,15 @@
         'entity_id': 'sensor.air_purifier_400s_pm2_5',
         'state': '1',
       }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'switch',
+          'friendly_name': 'Air Purifier 400s Display',
+          'icon': 'mdi:light-switch',
+        }),
+        'entity_id': 'switch.air_purifier_400s_display',
+        'state': 'on',
+      }),
     ]),
     '600s-purifier': list([
       dict({
@@ -149,6 +158,15 @@
         }),
         'entity_id': 'sensor.air_purifier_600s_pm2_5',
         'state': '1',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'switch',
+          'friendly_name': 'Air Purifier 600s Display',
+          'icon': 'mdi:light-switch',
+        }),
+        'entity_id': 'switch.air_purifier_600s_display',
+        'state': 'on',
       }),
     ]),
     'air-purifier': list([
@@ -219,6 +237,15 @@
         }),
         'entity_id': 'sensor.air_purifier_200s_filter_life',
         'state': '99',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'switch',
+          'friendly_name': 'Air Purifier 200s Display',
+          'icon': 'mdi:light-switch',
+        }),
+        'entity_id': 'switch.air_purifier_200s_display',
+        'state': 'on',
       }),
     ]),
   })
@@ -292,14 +319,18 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 200s automatic stop',
+          'device_class': 'switch',
+          'friendly_name': 'Humidifier 200s Automatic Stop',
+          'icon': 'mdi:light-switch',
         }),
         'entity_id': 'switch.humidifier_200s_automatic_stop',
         'state': 'on',
       }),
       dict({
         'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 200s display',
+          'device_class': 'switch',
+          'friendly_name': 'Humidifier 200s Display',
+          'icon': 'mdi:light-switch',
         }),
         'entity_id': 'switch.humidifier_200s_display',
         'state': 'on',
@@ -387,14 +418,18 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 600S automatic stop',
+          'device_class': 'switch',
+          'friendly_name': 'Humidifier 600S Automatic Stop',
+          'icon': 'mdi:light-switch',
         }),
         'entity_id': 'switch.humidifier_600s_automatic_stop',
         'state': 'on',
       }),
       dict({
         'attributes': ReadOnlyDict({
-          'friendly_name': 'Humidifier 600S display',
+          'device_class': 'switch',
+          'friendly_name': 'Humidifier 600S Display',
+          'icon': 'mdi:light-switch',
         }),
         'entity_id': 'switch.humidifier_600s_display',
         'state': 'on',
@@ -467,7 +502,9 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
+          'device_class': 'outlet',
           'friendly_name': 'Outlet',
+          'icon': 'mdi-power-socket',
         }),
         'entity_id': 'switch.outlet',
         'state': 'on',

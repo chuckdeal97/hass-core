@@ -6,6 +6,8 @@ from typing import Any, Generic, TypeVar
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncfan import air_features, humid_features
+from pyvesync.vesyncoutlet import outlet_config as outlet_features
+from pyvesync.vesyncswitch import feature_dict as switch_features
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,8 +28,11 @@ def get_domain_data(hass: HomeAssistant, config_entry: ConfigEntry, key: str) ->
 class VeSyncDeviceHelper:
     """Collection of VeSync device helpers."""
 
-    humidifier_models: set | None = None
     air_models: set | None = None
+    dim_switch_models: set | None = None
+    humidifier_models: set | None = None
+    outlet_models: set | None = None
+    switch_models: set | None = None
 
     def get_feature(
         self, device: VeSyncBaseDevice, dictionary: str, attribute: str
@@ -40,20 +45,6 @@ class VeSyncDeviceHelper:
     ) -> bool:
         """Return true if the feature is available."""
         return self.get_feature(device, dictionary, attribute) is not None
-
-    def is_humidifier(self, device_type: str) -> bool:
-        """Return true if the device type is a humidifier."""
-        if self.humidifier_models is None:
-            # cache the model list after the first use
-            self.humidifier_models = set(
-                chain(*[features["models"] for features in humid_features.values()]),
-            ).union(set(humid_features.keys()))
-            _LOGGER.debug(
-                "Initialized humidifier_models cache with %d models",
-                len(self.humidifier_models),
-            )
-
-        return device_type in self.humidifier_models
 
     def is_air_purifier(self, device_type: str) -> bool:
         """Return true if the device type is an air_purifier."""
@@ -69,10 +60,75 @@ class VeSyncDeviceHelper:
 
         return device_type in self.air_models
 
+    def is_dimmable_switch(self, device_type: str) -> bool:
+        """Return true if the device type is a switch."""
+        if self.dim_switch_models is None:
+            # cache the model list after the first use
+            switches = self._process_switches()
+            self.dim_switch_models = set(switches["dimmable"])
+            _LOGGER.debug(
+                "Initialized dim_switch_models cache with %d models",
+                len(self.dim_switch_models),
+            )
+
+        return device_type in self.dim_switch_models
+
+    def is_humidifier(self, device_type: str) -> bool:
+        """Return true if the device type is a humidifier."""
+        if self.humidifier_models is None:
+            # cache the model list after the first use
+            self.humidifier_models = set(
+                chain(*[features["models"] for features in humid_features.values()]),
+            ).union(set(humid_features.keys()))
+            _LOGGER.debug(
+                "Initialized humidifier_models cache with %d models",
+                len(self.humidifier_models),
+            )
+
+        return device_type in self.humidifier_models
+
+    def is_outlet(self, device_type: str) -> bool:
+        """Return true if the device type is an outlet."""
+        if self.outlet_models is None:
+            # cache the model list after the first use
+            self.outlet_models = set(outlet_features.keys())
+            _LOGGER.debug(
+                "Initialized outlet_models cache with %d models",
+                len(self.outlet_models),
+            )
+
+        return device_type in self.outlet_models
+
+    def is_switch(self, device_type: str) -> bool:
+        """Return true if the device type is a switch."""
+        if self.switch_models is None:
+            # cache the model list after the first use
+            switches = self._process_switches()
+            self.switch_models = set(switches["non-dimmable"])
+            _LOGGER.debug(
+                "Initialized switch_models cache with %d models",
+                len(self.switch_models),
+            )
+
+        return device_type in self.switch_models
+
     def reset_cache(self) -> None:
         """Reset the helper caches."""
         self.air_models = None
+        self.dim_switch_models = None
         self.humidifier_models = None
+        self.outlet_models = None
+        self.switch_models = None
+
+    def _process_switches(self) -> dict[str, list[str]]:
+        """Process the vesync feature dict for switches."""
+        switches: dict[str, list[str]] = {"dimmable": [], "non-dimmable": []}
+        for key, value in switch_features.items():
+            if "dimmable" in value["features"]:
+                switches["dimmable"].append(key)
+            else:
+                switches["non-dimmable"].append(key)
+        return switches
 
 
 DEVICE_HELPER = VeSyncDeviceHelper()
@@ -145,10 +201,13 @@ class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
 
 
 T = TypeVar("T")
+U = TypeVar("U")
 
 
-class VeSyncEntityDescriptionFactory(Generic[T], metaclass=abc.ABCMeta):
+class VeSyncEntityDescriptionFactory(Generic[T, U], metaclass=abc.ABCMeta):
     """Describe a factory interface for creating EntityDescription objects."""
+
+    object_class: U
 
     @classmethod
     def __subclasshook__(cls, subclass):

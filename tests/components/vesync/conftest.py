@@ -19,7 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
-from .common import FAN_MODEL, HUMIDIFIER_MODEL
+from .common import (
+    DIM_SWITCH_MODEL,
+    FAN_MODEL,
+    HUMIDIFIER_MODEL,
+    OUTLET_MODEL,
+    SWITCH_MODEL,
+)
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -115,6 +121,21 @@ def manager_with_devices_fixture(
         yield mock_vesync
 
 
+@pytest.fixture(name="air_features")
+def air_features_fixture() -> dict:
+    """Create a replacement dict for air_features fixture."""
+    DEVICE_HELPER.reset_cache()
+
+    return {
+        FAN_MODEL: {
+            "models": [FAN_MODEL, "BBB-CCC-DDD"],
+        },
+        "Model2": {
+            "models": ["WWW-XXX-YYY"],
+        },
+    }
+
+
 @pytest.fixture(name="humid_features")
 def humid_features_fixture() -> dict:
     """Create a replacement dict for humid_features fixture."""
@@ -130,18 +151,26 @@ def humid_features_fixture() -> dict:
     }
 
 
-@pytest.fixture(name="air_features")
-def air_features_fixture() -> dict:
-    """Create a replacement dict for humid_features fixture."""
+@pytest.fixture(name="outlet_features")
+def outlet_features_fixture() -> dict:
+    """Create a replacement dict for outlet_features fixture."""
     DEVICE_HELPER.reset_cache()
 
     return {
-        FAN_MODEL: {
-            "models": [FAN_MODEL, "BBB-CCC-DDD"],
-        },
-        "Model2": {
-            "models": ["WWW-XXX-YYY"],
-        },
+        OUTLET_MODEL: {},
+        "Model2": {},
+    }
+
+
+@pytest.fixture(name="switch_features")
+def switch_features_fixture() -> dict:
+    """Create a replacement dict for switch_features fixture."""
+    DEVICE_HELPER.reset_cache()
+
+    return {
+        SWITCH_MODEL: {"features": []},
+        DIM_SWITCH_MODEL: {"features": ["dimmable"]},
+        "Model2": {"features": []},
     }
 
 
@@ -188,6 +217,7 @@ def fan_fixture() -> VeSyncAirBypass:
     mock_fixture.device_name = "device name"
     mock_fixture.device_status = "on"
     mock_fixture.device_type = "LV-PUR131S"
+    # mock_fixture.device_type = FAN_MODEL # want to use this, but need to refactor first
     mock_fixture.fan_level = 1
     mock_fixture.is_on = True
     mock_fixture.night_light = False
@@ -226,6 +256,8 @@ def humidifier_fixture() -> VeSyncHumid200300S:
     mock_fixture.is_on = True
     mock_fixture.night_light = False
     mock_fixture.set_auto_mode = Mock()
+    mock_fixture.set_set_automatic_stop = Mock()
+    mock_fixture.set_display = Mock()
     mock_fixture.set_humidity_mode = Mock()
     mock_fixture.set_manual_mode = Mock()
     mock_fixture.sub_device_no = 1
@@ -256,12 +288,49 @@ def humidifier_fixture() -> VeSyncHumid200300S:
 
 
 @pytest.fixture(name="humidifier_nightlight")
-def humidifier_with_nightlight_fixture(
-    humidifier: VeSyncHumid200300S,
-) -> VeSyncHumid200300S:
+def humidifier_with_nightlight_fixture() -> VeSyncHumid200300S:
     """Create a mock VeSync humidifier fixture with night light."""
-    humidifier.night_light = True
-    return humidifier
+    mock_fixture = Mock(VeSyncHumid200300S)
+    mock_fixture.auto_humidity = 50
+    mock_fixture.cid = "cid"
+    mock_fixture.connection_status = "online"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = HUMIDIFIER_MODEL
+    mock_fixture.is_on = True
+    mock_fixture.night_light = True
+    mock_fixture.set_auto_mode = Mock()
+    mock_fixture.set_set_automatic_stop = Mock()
+    mock_fixture.set_display = Mock()
+    mock_fixture.set_humidity_mode = Mock()
+    mock_fixture.set_manual_mode = Mock()
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+    mock_fixture.warm_mist_feature = True
+
+    config = {}
+    #    config["auto_target_humidity"] = ["50"]
+    mock_fixture.config = config
+
+    config_dict = {}
+    config_dict["mist_modes"] = ["manual"]
+    config_dict["mist_levels"] = ["1", "2", "3"]
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    details["humidity_high"] = True
+    details["mode"] = "manual"
+    details["mist_virtual_level"] = 1
+    details["water_lacks"] = True
+    details["water_tank_lifted"] = True
+    mock_fixture.details = details
+
+    return mock_fixture
 
 
 @pytest.fixture(name="bulb")
@@ -272,18 +341,62 @@ def bulb_fixture():
 
 
 @pytest.fixture(name="switch")
-def switch_fixture():
+def switch_fixture() -> VeSyncSwitch:
     """Create a mock VeSync switch fixture."""
     mock_fixture = Mock(VeSyncSwitch)
+    mock_fixture.cid = "cid"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.connection_status = "online"
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = SWITCH_MODEL
     mock_fixture.is_dimmable = Mock(return_value=False)
+    mock_fixture.is_on = True
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+
+    config = {}
+    mock_fixture.config = config
+
+    config_dict = {}
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    mock_fixture.details = details
     return mock_fixture
 
 
 @pytest.fixture(name="dimmable_switch")
-def dimmable_switch_fixture():
+def dimmable_switch_fixture() -> VeSyncSwitch:
     """Create a mock VeSync switch fixture."""
     mock_fixture = Mock(VeSyncSwitch)
+    mock_fixture.cid = "cid"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.connection_status = "online"
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = DIM_SWITCH_MODEL
     mock_fixture.is_dimmable = Mock(return_value=True)
+    mock_fixture.is_on = True
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+
+    config = {}
+    mock_fixture.config = config
+
+    config_dict = {}
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    mock_fixture.details = details
     return mock_fixture
 
 
@@ -291,6 +404,28 @@ def dimmable_switch_fixture():
 def outlet_fixture():
     """Create a mock VeSync outlet fixture."""
     mock_fixture = Mock(VeSyncOutlet)
+    mock_fixture.cid = "cid"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.connection_status = "online"
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = OUTLET_MODEL
+    mock_fixture.is_on = True
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+
+    config = {}
+    mock_fixture.config = config
+
+    config_dict = {}
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    mock_fixture.details = details
     return mock_fixture
 
 

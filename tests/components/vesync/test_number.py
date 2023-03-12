@@ -156,7 +156,7 @@ async def test_number_entity__set_native_value(humidifier: VeSyncBaseEntity) -> 
 
 
 async def test_mist_level_factory__create() -> None:
-    """Test the Mist Level Factory supports impl."""
+    """Test the Mist Level Factory creates impl."""
     factory = MistLevelEntityDescriptionFactory()
 
     device = MagicMock(VeSyncBaseEntity)

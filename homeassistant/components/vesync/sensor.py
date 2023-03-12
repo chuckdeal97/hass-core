@@ -28,8 +28,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import VeSyncBaseEntity, get_domain_data
-from .const import DEV_TYPE_TO_HA, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
+from .common import DEVICE_HELPER, VeSyncBaseEntity, get_domain_data
+from .const import SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,11 +60,6 @@ def update_energy(device: VeSyncOutlet):
 def sku_supported(device: VeSyncBaseDevice, supported):
     """Get the base device of which a device is an instance."""
     return SKU_TO_BASE_DEVICE.get(device.device_type) in supported
-
-
-def ha_dev_type(device: VeSyncBaseDevice):
-    """Get the homeassistant device_type for a given device."""
-    return DEV_TYPE_TO_HA.get(device.device_type)
 
 
 FILTER_LIFE_SUPPORTED = ["LV-PUR131S", "Core200S", "Core300S", "Core400S", "Core600S"]
@@ -104,7 +99,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["power"],
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=lambda device: DEVICE_HELPER.is_outlet(device.device_type),
     ),
     VeSyncSensorEntityDescription(
         key="energy",
@@ -114,7 +109,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.energy_today,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=lambda device: DEVICE_HELPER.is_outlet(device.device_type),
     ),
     VeSyncSensorEntityDescription(
         key="energy-weekly",
@@ -124,7 +119,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.weekly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=lambda device: DEVICE_HELPER.is_outlet(device.device_type),
     ),
     VeSyncSensorEntityDescription(
         key="energy-monthly",
@@ -134,7 +129,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.monthly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=lambda device: DEVICE_HELPER.is_outlet(device.device_type),
     ),
     VeSyncSensorEntityDescription(
         key="energy-yearly",
@@ -144,7 +139,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.yearly_energy_total,
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=lambda device: DEVICE_HELPER.is_outlet(device.device_type),
     ),
     VeSyncSensorEntityDescription(
         key="voltage",
@@ -154,7 +149,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.details["voltage"],
         update_fn=update_energy,
-        exists_fn=lambda device: ha_dev_type(device) == "outlet",
+        exists_fn=lambda device: DEVICE_HELPER.is_outlet(device.device_type),
     ),
     # Humidifier - VeSyncHumid200300S
     VeSyncSensorEntityDescription(

@@ -32,7 +32,9 @@ async def async_setup_entry(
         """Add new devices to platform."""
         entities: list[LightEntity] = []
         for dev in devices:
-            if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
+            if DEVICE_HELPER.is_dimmable_switch(dev.device_type) or DEV_TYPE_TO_HA.get(
+                dev.device_type
+            ) in ("walldimmer", "bulb-dimmable"):
                 entities.append(VeSyncDimmableLightHA(dev))
             elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
                 entities.append(VeSyncTunableWhiteLightHA(dev))

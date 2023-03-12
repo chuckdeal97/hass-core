@@ -13,7 +13,13 @@ from homeassistant.components.vesync.common import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 
-from .common import FAN_MODEL, HUMIDIFIER_MODEL
+from .common import (
+    DIM_SWITCH_MODEL,
+    FAN_MODEL,
+    HUMIDIFIER_MODEL,
+    OUTLET_MODEL,
+    SWITCH_MODEL,
+)
 
 
 async def test_get_domain_data(
@@ -92,6 +98,49 @@ async def test_vesyncdevicehelper__has_feature_missing_attribute() -> None:
     assert mock_device.mock_calls[0] == call.dictionary.get("attribute", None)
 
 
+async def test_vesyncdevicehelper__is_air_purifier(air_features) -> None:
+    """Test helper for detecting a humidifer."""
+    with patch("homeassistant.components.vesync.common.air_features") as mock_features:
+        mock_features.values.side_effect = air_features.values
+        mock_features.keys.side_effect = air_features.keys
+
+        helper = VeSyncDeviceHelper()
+        assert not helper.air_models
+        assert helper.is_air_purifier(HUMIDIFIER_MODEL) is False
+        assert helper.is_air_purifier(FAN_MODEL) is True
+        assert helper.air_models == {
+            FAN_MODEL,
+            "BBB-CCC-DDD",
+            "Model2",
+            "WWW-XXX-YYY",
+        }
+        assert mock_features.values.call_count == 1
+        assert mock_features.keys.call_count == 1
+
+
+async def test_vesyncdevicehelper__is_dimmable_switch(switch_features) -> None:
+    """Test helper for detecting a dimmable switch."""
+    with patch(
+        "homeassistant.components.vesync.common.switch_features"
+    ) as mock_features:
+        mock_features.items.side_effect = switch_features.items
+        mock_features.values.side_effect = switch_features.values
+        mock_features.keys.side_effect = switch_features.keys
+
+        helper = VeSyncDeviceHelper()
+        assert not helper.dim_switch_models
+        assert not helper.switch_models
+        assert helper.is_dimmable_switch(DIM_SWITCH_MODEL) is True
+        assert helper.is_dimmable_switch(SWITCH_MODEL) is False
+        assert helper.dim_switch_models == {
+            DIM_SWITCH_MODEL,
+        }
+        assert not helper.switch_models
+        assert mock_features.items.call_count == 1
+        assert mock_features.values.call_count == 0
+        assert mock_features.keys.call_count == 0
+
+
 async def test_vesyncdevicehelper__is_humidifier(humid_features) -> None:
     """Test helper for detecting a humidifer."""
     with patch(
@@ -114,42 +163,92 @@ async def test_vesyncdevicehelper__is_humidifier(humid_features) -> None:
         assert mock_features.keys.call_count == 1
 
 
-async def test_vesyncdevicehelper__is_air_purifier(air_features) -> None:
-    """Test helper for detecting a humidifer."""
+async def test_vesyncdevicehelper__is_outlet(outlet_features) -> None:
+    """Test helper for detecting a switch."""
     with patch(
-        "homeassistant.components.vesync.common.humid_features"
+        "homeassistant.components.vesync.common.outlet_features"
     ) as mock_features:
-        mock_features.values.side_effect = air_features.values
-        mock_features.keys.side_effect = air_features.keys
+        mock_features.keys.side_effect = outlet_features.keys
 
         helper = VeSyncDeviceHelper()
-        assert not helper.humidifier_models
-        assert helper.is_humidifier(HUMIDIFIER_MODEL) is False
-        assert helper.is_humidifier(FAN_MODEL) is True
-        assert helper.humidifier_models == {
-            FAN_MODEL,
-            "BBB-CCC-DDD",
+        assert not helper.outlet_models
+        assert helper.is_outlet(OUTLET_MODEL) is True
+        assert helper.is_outlet(SWITCH_MODEL) is False
+        assert helper.outlet_models == {
+            OUTLET_MODEL,
             "Model2",
-            "WWW-XXX-YYY",
         }
-        assert mock_features.values.call_count == 1
         assert mock_features.keys.call_count == 1
+
+
+async def test_vesyncdevicehelper__is_switch(switch_features) -> None:
+    """Test helper for detecting a switch."""
+    with patch(
+        "homeassistant.components.vesync.common.switch_features"
+    ) as mock_features:
+        mock_features.items.side_effect = switch_features.items
+        mock_features.values.side_effect = switch_features.values
+        mock_features.keys.side_effect = switch_features.keys
+
+        helper = VeSyncDeviceHelper()
+        assert not helper.dim_switch_models
+        assert not helper.switch_models
+        assert helper.is_switch(DIM_SWITCH_MODEL) is False
+        assert helper.is_switch(SWITCH_MODEL) is True
+        assert not helper.dim_switch_models
+        assert helper.switch_models == {
+            SWITCH_MODEL,
+            "Model2",
+        }
+        assert mock_features.items.call_count == 1
+        assert mock_features.values.call_count == 0
+        assert mock_features.keys.call_count == 0
 
 
 async def test_vesyncdevicehelper__reset_cache() -> None:
     """Test helper cache reset."""
     helper = VeSyncDeviceHelper()
-    assert helper.humidifier_models is None
     assert helper.air_models is None
+    assert helper.dim_switch_models is None
+    assert helper.humidifier_models is None
+    assert helper.outlet_models is None
+    assert helper.switch_models is None
     helper.is_humidifier("ANYTHING")
-    assert helper.humidifier_models is not None
     assert helper.air_models is None
+    assert helper.dim_switch_models is None
+    assert helper.humidifier_models is not None
+    assert helper.outlet_models is None
+    assert helper.switch_models is None
     helper.is_air_purifier("ANYTHING")
-    assert helper.humidifier_models is not None
     assert helper.air_models is not None
+    assert helper.dim_switch_models is None
+    assert helper.humidifier_models is not None
+    assert helper.outlet_models is None
+    assert helper.switch_models is None
+    helper.is_dimmable_switch("ANYTHING")
+    assert helper.air_models is not None
+    assert helper.dim_switch_models is not None
+    assert helper.humidifier_models is not None
+    assert helper.outlet_models is None
+    assert helper.switch_models is None
+    helper.is_switch("ANYTHING")
+    assert helper.air_models is not None
+    assert helper.dim_switch_models is not None
+    assert helper.humidifier_models is not None
+    assert helper.outlet_models is None
+    assert helper.switch_models is not None
+    helper.is_outlet("ANYTHING")
+    assert helper.air_models is not None
+    assert helper.dim_switch_models is not None
+    assert helper.humidifier_models is not None
+    assert helper.outlet_models is not None
+    assert helper.switch_models is not None
     helper.reset_cache()
-    assert helper.humidifier_models is None
     assert helper.air_models is None
+    assert helper.dim_switch_models is None
+    assert helper.humidifier_models is None
+    assert helper.outlet_models is None
+    assert helper.switch_models is None
 
 
 async def test_base_entity__init(base_device) -> None:
