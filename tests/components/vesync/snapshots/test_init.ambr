@@ -95,6 +95,15 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'switch',
+          'friendly_name': 'Air Purifier 400s Child Lock',
+          'icon': 'mdi:light-switch',
+        }),
+        'entity_id': 'switch.air_purifier_400s_child_lock',
+        'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'switch',
           'friendly_name': 'Air Purifier 400s Display',
           'icon': 'mdi:light-switch',
         }),
@@ -158,6 +167,15 @@
         }),
         'entity_id': 'sensor.air_purifier_600s_pm2_5',
         'state': '1',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'switch',
+          'friendly_name': 'Air Purifier 600s Child Lock',
+          'icon': 'mdi:light-switch',
+        }),
+        'entity_id': 'switch.air_purifier_600s_child_lock',
+        'state': 'off',
       }),
       dict({
         'attributes': ReadOnlyDict({
@@ -237,6 +255,15 @@
         }),
         'entity_id': 'sensor.air_purifier_200s_filter_life',
         'state': '99',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'device_class': 'switch',
+          'friendly_name': 'Air Purifier 200s Child Lock',
+          'icon': 'mdi:light-switch',
+        }),
+        'entity_id': 'switch.air_purifier_200s_child_lock',
+        'state': 'off',
       }),
       dict({
         'attributes': ReadOnlyDict({
@@ -505,6 +532,10 @@
           'device_class': 'outlet',
           'friendly_name': 'Outlet',
           'icon': 'mdi-power-socket',
+          'monthly_energy_total': 0,
+          'voltage': 120.0,
+          'weekly_energy_total': 0,
+          'yearly_energy_total': 0,
         }),
         'entity_id': 'switch.outlet',
         'state': 'on',

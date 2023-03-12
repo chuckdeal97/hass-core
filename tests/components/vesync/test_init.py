@@ -178,17 +178,17 @@ async def test_asynch_setup_entry__loaded_state(
 
     identifier = "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 4
+    assert len(entities) == 5
     states[identifier] = get_states(hass, entities)
 
     identifier = "400s-purifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 6
+    assert len(entities) == 7
     states[identifier] = get_states(hass, entities)
 
     identifier = "600s-purifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 6
+    assert len(entities) == 7
     states[identifier] = get_states(hass, entities)
 
     assert states == snapshot(name="fans")
