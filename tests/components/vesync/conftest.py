@@ -417,6 +417,10 @@ def outlet_fixture():
     mock_fixture.turn_off = Mock()
     mock_fixture.update = Mock()
     mock_fixture.uuid = "uuid"
+    mock_fixture.voltage = 1
+    mock_fixture.weekly_energy_total = 2
+    mock_fixture.monthly_energy_total = 3
+    mock_fixture.yearly_energy_total = 4
 
     config = {}
     mock_fixture.config = config

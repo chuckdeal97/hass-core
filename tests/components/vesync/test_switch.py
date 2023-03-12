@@ -3,7 +3,7 @@ import logging
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from pyvesync.vesyncfan import VeSyncHumid200300S
+from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
 from pyvesync.vesyncoutlet import VeSyncOutlet
 from pyvesync.vesyncswitch import VeSyncSwitch
 
@@ -12,10 +12,12 @@ from homeassistant.components.vesync import DOMAIN, VS_SWITCHES
 from homeassistant.components.vesync.common import VeSyncDevice
 from homeassistant.components.vesync.switch import (
     AutomaticStopEntityDescriptionFactory,
+    ChildLockEntityDescriptionFactory,
     DisplayEntityDescriptionFactory,
     OutletEntityDescriptionFactory,
     SwitchEntityDescriptionFactory,
     VeSyncAutomaticStopHA,
+    VeSyncChildLockHA,
     VeSyncDisplayHA,
     VeSyncOutletEntityDescription,
     VeSyncOutletHA,
@@ -142,8 +144,7 @@ async def test_async_setup_entry__invalid(
 async def test_switch_entity__init(switch: VeSyncSwitch) -> None:
     """Test the switch entity constructor."""
     description = VeSyncSwitchEntityDescription(
-        key="desc-key",
-        name="Desc Name",
+        key="",
         icon="mdi:light-switch",
         device_class=SwitchDeviceClass.SWITCH,
     )
@@ -223,8 +224,7 @@ async def test_switch_entity__turn_on(switch: VeSyncSwitch) -> None:
 async def test_outlet_entity__init(outlet: VeSyncOutlet) -> None:
     """Test the outlet entity constructor."""
     description = VeSyncOutletEntityDescription(
-        key="desc-key",
-        name="Desc Name",
+        key="",
         icon="mdi-power-socket",
         device_class=SwitchDeviceClass.OUTLET,
     )
@@ -252,7 +252,12 @@ async def test_outlet_entity__extra_state_attributes(outlet: VeSyncOutlet) -> No
     )
     entity = VeSyncOutletHA(outlet, description)
 
-    assert entity.extra_state_attributes is None
+    assert entity.extra_state_attributes == {
+        "voltage": 1,
+        "weekly_energy_total": 2,
+        "monthly_energy_total": 3,
+        "yearly_energy_total": 4,
+    }
 
 
 async def test_outlet_entity__is_on(outlet: VeSyncOutlet) -> None:
@@ -312,74 +317,6 @@ async def test_outlet_entity__update(outlet: VeSyncOutlet) -> None:
     entity.update()
     assert outlet.update.call_count == 1
     assert outlet.update_energy.call_count == 1
-
-
-async def test_display_entity__init(humidifier: VeSyncHumid200300S) -> None:
-    """Test the display entity constructor."""
-    description = VeSyncSwitchEntityDescription(
-        key="display",
-        name="Display",
-        icon="mdi:light-switch",
-        device_class=SwitchDeviceClass.SWITCH,
-    )
-    entity = VeSyncDisplayHA(humidifier, description)
-
-    assert entity.device == humidifier
-    assert entity.device_class == SwitchDeviceClass.SWITCH
-    assert entity.entity_category is None
-    assert entity.entity_description == description
-    assert entity.entity_picture is None
-    assert entity.has_entity_name is False
-    assert entity.icon == "mdi:light-switch"
-    assert entity.name == "device name Display"
-    assert entity.supported_features is None
-    assert entity.unique_id == "cid1-display"
-
-
-async def test_display_entity__is_on(humidifier: VeSyncHumid200300S) -> None:
-    """Test the display entity is_on impl."""
-    description = VeSyncSwitchEntityDescription(
-        key="display",
-        name="Display",
-        icon="mdi:light-switch",
-        device_class=SwitchDeviceClass.SWITCH,
-    )
-    entity = VeSyncDisplayHA(humidifier, description)
-
-    humidifier.details["display"] = False
-    assert entity.is_on is False
-    humidifier.details["display"] = True
-    assert entity.is_on is True
-
-
-async def test_display_entity__turn_off(humidifier: VeSyncHumid200300S) -> None:
-    """Test the display entity turn_off impl."""
-    description = VeSyncSwitchEntityDescription(
-        key="display",
-        name="Display",
-        icon="mdi:light-switch",
-        device_class=SwitchDeviceClass.SWITCH,
-    )
-    entity = VeSyncDisplayHA(humidifier, description)
-
-    entity.turn_off()
-    assert humidifier.turn_off.call_count == 0
-    assert humidifier.turn_off_display.call_count == 1
-
-
-async def test_display_entity__turn_on(humidifier: VeSyncHumid200300S) -> None:
-    """Test the display entity turn_on impl."""
-    description = VeSyncSwitchEntityDescription(
-        key="display",
-        name="Display",
-        icon="mdi:light-switch",
-        device_class=SwitchDeviceClass.SWITCH,
-    )
-    entity = VeSyncDisplayHA(humidifier, description)
-
-    entity.turn_on()
-    assert humidifier.turn_on.call_count == 0
-    assert humidifier.turn_on_display.call_count == 1
 
 
 async def test_automatic_stop_entity__init(humidifier: VeSyncHumid200300S) -> None:
@@ -450,6 +387,142 @@ async def test_automatic_stop_entity__turn_on(humidifier: VeSyncHumid200300S) ->
     assert humidifier.automatic_stop_on.call_count == 1
 
 
+async def test_child_lock_entity__init(fan: VeSyncAirBypass) -> None:
+    """Test the child_lock entity constructor."""
+    description = VeSyncSwitchEntityDescription(
+        key="child-lock",
+        name="Child Lock",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncChildLockHA(fan, description)
+
+    assert entity.device == fan
+    assert entity.device_class == SwitchDeviceClass.SWITCH
+    assert entity.entity_category is None
+    assert entity.entity_description == description
+    assert entity.entity_picture is None
+    assert entity.has_entity_name is False
+    assert entity.icon == "mdi:light-switch"
+    assert entity.name == "device name Child Lock"
+    assert entity.supported_features is None
+    assert entity.unique_id == "cid1-child-lock"
+
+
+async def test_child_lock_entity__is_on(fan: VeSyncAirBypass) -> None:
+    """Test the child_lock entity is_on impl."""
+    description = VeSyncSwitchEntityDescription(
+        key="child-lock",
+        name="Child Lock",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncChildLockHA(fan, description)
+
+    fan.details["child_lock"] = False
+    assert entity.is_on is False
+    fan.details["child_lock"] = True
+    assert entity.is_on is True
+
+
+async def test_child_lock_entity__turn_off(fan: VeSyncAirBypass) -> None:
+    """Test the child_lock entity turn_off impl."""
+    description = VeSyncSwitchEntityDescription(
+        key="child-lock",
+        name="Child Lock",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncChildLockHA(fan, description)
+
+    entity.turn_off()
+    assert fan.turn_off.call_count == 0
+    assert fan.child_lock_off.call_count == 1
+
+
+async def test_child_lock_entity__turn_on(fan: VeSyncAirBypass) -> None:
+    """Test the child_lock entity turn_on impl."""
+    description = VeSyncSwitchEntityDescription(
+        key="child-lock",
+        name="Child Lock",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncChildLockHA(fan, description)
+
+    entity.turn_on()
+    assert fan.turn_on.call_count == 0
+    assert fan.child_lock_on.call_count == 1
+
+
+async def test_display_entity__init(humidifier: VeSyncHumid200300S) -> None:
+    """Test the display entity constructor."""
+    description = VeSyncSwitchEntityDescription(
+        key="display",
+        name="Display",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncDisplayHA(humidifier, description)
+
+    assert entity.device == humidifier
+    assert entity.device_class == SwitchDeviceClass.SWITCH
+    assert entity.entity_category is None
+    assert entity.entity_description == description
+    assert entity.entity_picture is None
+    assert entity.has_entity_name is False
+    assert entity.icon == "mdi:light-switch"
+    assert entity.name == "device name Display"
+    assert entity.supported_features is None
+    assert entity.unique_id == "cid1-display"
+
+
+async def test_display_entity__is_on(humidifier: VeSyncHumid200300S) -> None:
+    """Test the display entity is_on impl."""
+    description = VeSyncSwitchEntityDescription(
+        key="display",
+        name="Display",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncDisplayHA(humidifier, description)
+
+    humidifier.details["display"] = False
+    assert entity.is_on is False
+    humidifier.details["display"] = True
+    assert entity.is_on is True
+
+
+async def test_display_entity__turn_off(humidifier: VeSyncHumid200300S) -> None:
+    """Test the display entity turn_off impl."""
+    description = VeSyncSwitchEntityDescription(
+        key="display",
+        name="Display",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncDisplayHA(humidifier, description)
+
+    entity.turn_off()
+    assert humidifier.turn_off.call_count == 0
+    assert humidifier.turn_off_display.call_count == 1
+
+
+async def test_display_entity__turn_on(humidifier: VeSyncHumid200300S) -> None:
+    """Test the display entity turn_on impl."""
+    description = VeSyncSwitchEntityDescription(
+        key="display",
+        name="Display",
+        icon="mdi:light-switch",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+    entity = VeSyncDisplayHA(humidifier, description)
+
+    entity.turn_on()
+    assert humidifier.turn_on.call_count == 0
+    assert humidifier.turn_on_display.call_count == 1
+
+
 async def test_automatic_stop_factory__create() -> None:
     """Test the Automatic Stop Factory creates impl."""
     factory = AutomaticStopEntityDescriptionFactory()
@@ -473,6 +546,32 @@ async def test_automatic_stop_factory__supports() -> None:
     device.set_automatic_stop = None
     assert factory.supports(device) is False
     device.set_automatic_stop = Mock()
+    assert factory.supports(device) is True
+
+
+async def test_child_lock_factory__create() -> None:
+    """Test the Child Lock Factory creates impl."""
+    factory = ChildLockEntityDescriptionFactory()
+
+    device = MagicMock(VeSyncDevice)
+
+    description = factory.create(device)
+    assert description
+    assert description.device_class == SwitchDeviceClass.SWITCH
+    assert description.entity_category == EntityCategory.CONFIG
+    assert description.icon == "mdi:light-switch"
+    assert description.key == "child-lock"
+    assert description.name == "Child Lock"
+
+
+async def test_child_lock_factory__supports() -> None:
+    """Test the Child Lock Factory supports impl."""
+    factory = ChildLockEntityDescriptionFactory()
+
+    device = MagicMock(VeSyncDevice)
+    device.set_child_lock = None
+    assert factory.supports(device) is False
+    device.set_child_lock = Mock()
     assert factory.supports(device) is True
 
 

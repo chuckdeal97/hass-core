@@ -1,4 +1,5 @@
 """Support for VeSync switches."""
+from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -52,12 +53,16 @@ class VeSyncBaseSwitch(VeSyncDevice, SwitchEntity):
 
     def __init__(
         self,
-        switch: VeSyncSwitch | VeSyncOutlet,
+        switch: VeSyncBaseDevice | VeSyncSwitch | VeSyncOutlet,
         description: VeSyncSwitchEntityDescription,
     ) -> None:
         """Initialize the VeSync switch device."""
         super().__init__(switch)
         self.entity_description = description
+        if description.name:
+            self._attr_name = f"{super().name} {description.name}"
+        if description.key:
+            self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -75,51 +80,28 @@ class VeSyncOutletHA(VeSyncBaseSwitch, SwitchEntity):
 
     device: VeSyncOutlet
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the state attributes of the device."""
+        return (
+            {
+                "voltage": self.device.voltage,
+                "weekly_energy_total": self.device.weekly_energy_total,
+                "monthly_energy_total": self.device.monthly_energy_total,
+                "yearly_energy_total": self.device.yearly_energy_total,
+            }
+            if hasattr(self.device, "weekly_energy_total")
+            else {}
+        )
+
     def update(self) -> None:
         """Update outlet details and energy usage."""
         self.device.update()
         self.device.update_energy()
 
 
-class VeSyncDisplayHA(VeSyncSwitchHA):
-    """Representation of the display on a VeSync humidifier."""
-
-    def __init__(
-        self,
-        switch: VeSyncSwitch,
-        description: VeSyncSwitchEntityDescription,
-    ) -> None:
-        """Initialize the VeSync switch device."""
-        super().__init__(switch, description)
-        self._attr_name = f"{super().name} {description.name}"
-        self._attr_unique_id = f"{super().unique_id}-{description.key}"
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if display is on."""
-        return self.device.details["display"]
-
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the display on."""
-        self.device.turn_on_display()
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the display off."""
-        self.device.turn_off_display()
-
-
-class VeSyncAutomaticStopHA(VeSyncSwitchHA):
-    """Representation of the automatic stop toggle on a VeSync humidifier."""
-
-    def __init__(
-        self,
-        switch: VeSyncSwitch,
-        description: VeSyncSwitchEntityDescription,
-    ) -> None:
-        """Initialize the VeSync switch device."""
-        super().__init__(switch, description)
-        self._attr_name = f"{super().name} {description.name}"
-        self._attr_unique_id = f"{super().unique_id}-{description.key}"
+class VeSyncAutomaticStopHA(VeSyncBaseSwitch):
+    """Representation of the automatic stop toggle on a VeSync device."""
 
     @property
     def is_on(self) -> bool:
@@ -133,6 +115,40 @@ class VeSyncAutomaticStopHA(VeSyncSwitchHA):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the automatic stop off."""
         self.device.automatic_stop_off()
+
+
+class VeSyncChildLockHA(VeSyncBaseSwitch):
+    """Representation of the child lock on a VeSync device."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if lock is on."""
+        return self.device.details["child_lock"]
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the lock on."""
+        self.device.child_lock_on()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the lock off."""
+        self.device.child_lock_off()
+
+
+class VeSyncDisplayHA(VeSyncBaseSwitch):
+    """Representation of the display on a VeSync device."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if display is on."""
+        return self.device.details["display"]
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the display on."""
+        self.device.turn_on_display()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the display off."""
+        self.device.turn_off_display()
 
 
 class SwitchEntityDescriptionFactory(
@@ -171,26 +187,6 @@ class OutletEntityDescriptionFactory(
         return DEVICE_HELPER.is_outlet(device.device_type)
 
 
-class DisplayEntityDescriptionFactory(
-    VeSyncEntityDescriptionFactory[VeSyncSwitchEntityDescription, type[VeSyncDisplayHA]]
-):
-    """Create an entity description for a device that supports a display."""
-
-    object_class = VeSyncDisplayHA
-
-    def create(self, device: VeSyncBaseDevice) -> VeSyncSwitchEntityDescription:
-        """Create a VeSyncSwitchEntityDescription."""
-        return VeSyncSwitchEntityDescription(
-            key="display",
-            name="Display",
-            entity_category=EntityCategory.CONFIG,
-        )
-
-    def supports(self, device: VeSyncBaseDevice) -> bool:
-        """Determine if this device supports a display feature."""
-        return hasattr(device, "set_display") and callable(device.set_display)
-
-
 class AutomaticStopEntityDescriptionFactory(
     VeSyncEntityDescriptionFactory[
         VeSyncSwitchEntityDescription, type[VeSyncAutomaticStopHA]
@@ -215,11 +211,54 @@ class AutomaticStopEntityDescriptionFactory(
         )
 
 
+class ChildLockEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[
+        VeSyncSwitchEntityDescription, type[VeSyncChildLockHA]
+    ]
+):
+    """Create an entity description for a device that supports a child lock."""
+
+    object_class = VeSyncChildLockHA
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncSwitchEntityDescription:
+        """Create a VeSyncSwitchEntityDescription."""
+        return VeSyncSwitchEntityDescription(
+            key="child-lock",
+            name="Child Lock",
+            entity_category=EntityCategory.CONFIG,
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a lock feature."""
+        return hasattr(device, "set_child_lock") and callable(device.set_child_lock)
+
+
+class DisplayEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[VeSyncSwitchEntityDescription, type[VeSyncDisplayHA]]
+):
+    """Create an entity description for a device that supports a display."""
+
+    object_class = VeSyncDisplayHA
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncSwitchEntityDescription:
+        """Create a VeSyncSwitchEntityDescription."""
+        return VeSyncSwitchEntityDescription(
+            key="display",
+            name="Display",
+            entity_category=EntityCategory.CONFIG,
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a display feature."""
+        return hasattr(device, "set_display") and callable(device.set_display)
+
+
 _FACTORIES: list[VeSyncEntityDescriptionFactory] = [
     SwitchEntityDescriptionFactory(),
     OutletEntityDescriptionFactory(),
-    DisplayEntityDescriptionFactory(),
     AutomaticStopEntityDescriptionFactory(),
+    ChildLockEntityDescriptionFactory(),
+    DisplayEntityDescriptionFactory(),
 ]
 
 
