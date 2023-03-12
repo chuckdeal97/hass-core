@@ -39,8 +39,32 @@ class VeSyncNumberEntityDescription(
     update_fn: Callable[[VeSyncBaseDevice, float], None] = lambda device, value: None
 
 
+class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
+    """Representation of a number for configuring a VeSync device."""
+
+    entity_description: VeSyncNumberEntityDescription
+
+    def __init__(
+        self, device: VeSyncDevice, description: VeSyncNumberEntityDescription
+    ) -> None:
+        """Initialize the VeSync humidifier device."""
+        super().__init__(device)
+        self.entity_description = description
+        self._attr_name = f"{super().name} {description.name}"
+        self._attr_unique_id = f"{super().unique_id}-{description.key}"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the value of the number."""
+        return self.entity_description.value_fn(self.device)
+
+    def set_native_value(self, value: float) -> None:
+        """Set the value of the number."""
+        self.entity_description.update_fn(self.device, value)
+
+
 class MistLevelEntityDescriptionFactory(
-    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription]
+    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription, VeSyncNumberEntity]
 ):
     """Create an entity description for a device that supports mist levels."""
 
@@ -100,27 +124,3 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_NUMBERS), discover)
     )
-
-
-class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
-    """Representation of a number for configuring a VeSync device."""
-
-    entity_description: VeSyncNumberEntityDescription
-
-    def __init__(
-        self, device: VeSyncDevice, description: VeSyncNumberEntityDescription
-    ) -> None:
-        """Initialize the VeSync humidifier device."""
-        super().__init__(device)
-        self.entity_description = description
-        self._attr_name = f"{super().name} {description.name}"
-        self._attr_unique_id = f"{super().unique_id}-{description.key}"
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the value of the number."""
-        return self.entity_description.value_fn(self.device)
-
-    def set_native_value(self, value: float) -> None:
-        """Set the value of the number."""
-        self.entity_description.update_fn(self.device, value)

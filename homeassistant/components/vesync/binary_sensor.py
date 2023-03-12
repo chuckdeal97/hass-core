@@ -41,8 +41,30 @@ class VeSyncBinarySensorEntityDescription(
     """Describe VeSync binary_sensor entity."""
 
 
+class VeSyncBinarySensorEntity(VeSyncBaseEntity, BinarySensorEntity):
+    """Representation of a binary sensor describing diagnostics of a VeSync device."""
+
+    entity_description: VeSyncBinarySensorEntityDescription
+
+    def __init__(
+        self, device: VeSyncDevice, description: VeSyncBinarySensorEntityDescription
+    ) -> None:
+        """Initialize the VeSync humidifier device."""
+        super().__init__(device)
+        self.entity_description = description
+        self._attr_name = f"{super().name} {description.name}"
+        self._attr_unique_id = f"{super().unique_id}-{description.key}"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.value_fn(self.device)
+
+
 class EmptyWaterTankEntityDescriptionFactory(
-    VeSyncEntityDescriptionFactory[VeSyncBinarySensorEntityDescription]
+    VeSyncEntityDescriptionFactory[
+        VeSyncBinarySensorEntityDescription, VeSyncBinarySensorEntity
+    ]
 ):
     """Create an entity description for a device that supports empty water tank sensor."""
 
@@ -64,7 +86,9 @@ class EmptyWaterTankEntityDescriptionFactory(
 
 
 class WaterTankLiftedEntityDescriptionFactory(
-    VeSyncEntityDescriptionFactory[VeSyncBinarySensorEntityDescription]
+    VeSyncEntityDescriptionFactory[
+        VeSyncBinarySensorEntityDescription, VeSyncBinarySensorEntity
+    ]
 ):
     """Create an entity description for a device that supports water tank lifted sensor."""
 
@@ -86,7 +110,9 @@ class WaterTankLiftedEntityDescriptionFactory(
 
 
 class HighHumidityEntityDescriptionFactory(
-    VeSyncEntityDescriptionFactory[VeSyncBinarySensorEntityDescription]
+    VeSyncEntityDescriptionFactory[
+        VeSyncBinarySensorEntityDescription, VeSyncBinarySensorEntity
+    ]
 ):
     """Create an entity description for a device that supports high humidity sensor."""
 
@@ -147,23 +173,3 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_BINARY_SENSORS), discover)
     )
-
-
-class VeSyncBinarySensorEntity(VeSyncBaseEntity, BinarySensorEntity):
-    """Representation of a binary sensor describing diagnostics of a VeSync device."""
-
-    entity_description: VeSyncBinarySensorEntityDescription
-
-    def __init__(
-        self, device: VeSyncDevice, description: VeSyncBinarySensorEntityDescription
-    ) -> None:
-        """Initialize the VeSync humidifier device."""
-        super().__init__(device)
-        self.entity_description = description
-        self._attr_name = f"{super().name} {description.name}"
-        self._attr_unique_id = f"{super().unique_id}-{description.key}"
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self.entity_description.value_fn(self.device)
