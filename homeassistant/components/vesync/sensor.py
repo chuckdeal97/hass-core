@@ -189,11 +189,6 @@ async def async_setup_entry(
     )
 
 
-@callback
-def _setup_entities(devices, async_add_entities):
-    """Check if device is online and add entity."""
-
-
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     """Representation of a sensor describing a VeSync device."""
 

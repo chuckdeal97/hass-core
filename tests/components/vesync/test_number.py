@@ -6,9 +6,11 @@ import pytest
 from homeassistant.components.vesync import DOMAIN, VS_NUMBERS
 from homeassistant.components.vesync.common import VeSyncBaseEntity
 from homeassistant.components.vesync.number import (
+    FanSpeedEntityDescriptionFactory,
     MistLevelEntityDescriptionFactory,
     VeSyncNumberEntity,
     VeSyncNumberEntityDescription,
+    WarmMistLevelEntityDescriptionFactory,
     async_setup_entry,
 )
 from homeassistant.const import EntityCategory
@@ -67,6 +69,8 @@ async def test_async_setup_entry__invalid(
     mock_humidifier.device_name = "invalid_name"
     details = {}
     mock_humidifier.details = details
+    config_dict = {}
+    mock_humidifier.config_dict = config_dict
 
     callback = Mock(AddEntitiesCallback)
 
@@ -155,6 +159,44 @@ async def test_number_entity__set_native_value(humidifier: VeSyncBaseEntity) -> 
     mock_update_fn.assert_called_once()
 
 
+async def test_fan_speed_factory__create() -> None:
+    """Test the Fan Speed Factory creates impl."""
+    factory = FanSpeedEntityDescriptionFactory()
+
+    device = MagicMock(VeSyncBaseEntity)
+    details_dict = {}
+    device.speed = 1
+    device.details = MagicMock()
+    device.details.__getitem__.side_effect = details_dict.__getitem__
+    device.config_dict = {"levels": ["1", "2"]}
+    device.change_fan_speed = Mock()
+
+    description = factory.create(device)
+    assert description
+    assert description.key == "fan-speed-level"
+    assert description.name == "Fan Speed Level"
+    assert description.entity_category == EntityCategory.CONFIG
+    assert description.native_step == 1
+    assert description.native_min_value == 1.0
+    assert description.native_max_value == 2.0
+    assert callable(description.value_fn)
+    assert description.value_fn(device) == 1
+    assert callable(description.update_fn)
+    description.update_fn(device, 2)
+    device.change_fan_speed.assert_called_once_with(2)
+
+
+async def test_fan_speed_factory__supports() -> None:
+    """Test the Fan Speed Factory supports impl."""
+    factory = FanSpeedEntityDescriptionFactory()
+
+    device = MagicMock(VeSyncBaseEntity)
+    device.change_fan_speed = None
+    assert factory.supports(device) is False
+    device.change_fan_speed = Mock()
+    assert factory.supports(device) is True
+
+
 async def test_mist_level_factory__create() -> None:
     """Test the Mist Level Factory creates impl."""
     factory = MistLevelEntityDescriptionFactory()
@@ -190,4 +232,42 @@ async def test_mist_level_factory__supports() -> None:
     device.details = {}
     assert factory.supports(device) is False
     device.details["mist_virtual_level"] = 1
+    assert factory.supports(device) is True
+
+
+async def test_warm_mist_level_factory__create() -> None:
+    """Test the Warm Mist Level Factory creates impl."""
+    factory = WarmMistLevelEntityDescriptionFactory()
+
+    device = MagicMock(VeSyncBaseEntity)
+    details_dict = {"warm_mist_level": 1}
+    device.details = MagicMock()
+    device.details.__getitem__.side_effect = details_dict.__getitem__
+    device.config_dict = {"warm_mist_levels": ["1", "2"]}
+    device.set_warm_level = Mock()
+
+    description = factory.create(device)
+    assert description
+    assert description.key == "warm-mist-level"
+    assert description.name == "Warm Mist Level"
+    assert description.entity_category == EntityCategory.CONFIG
+    assert description.native_step == 1
+    assert description.native_min_value == 1.0
+    assert description.native_max_value == 2.0
+    assert callable(description.value_fn)
+    assert description.value_fn(device) == 1
+    assert device.details.mock_calls[0].args == ("warm_mist_level",)
+    assert callable(description.update_fn)
+    description.update_fn(device, 2)
+    device.set_warm_level.assert_called_once_with(2)
+
+
+async def test_warm_mist_level_factory__supports() -> None:
+    """Test the Warm Mist Level Factory supports impl."""
+    factory = WarmMistLevelEntityDescriptionFactory()
+
+    device = MagicMock(VeSyncBaseEntity)
+    device.details = {}
+    assert factory.supports(device) is False
+    device.details["warm_mist_level"] = 1
     assert factory.supports(device) is True

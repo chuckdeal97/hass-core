@@ -63,6 +63,29 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         self.entity_description.update_fn(self.device, value)
 
 
+class FanSpeedEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription, VeSyncNumberEntity]
+):
+    """Create an entity description for a device that supports fan speeds."""
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
+        """Create a VeSyncNumberEntityDescription."""
+        return VeSyncNumberEntityDescription(
+            key="fan-speed-level",
+            name="Fan Speed Level",
+            entity_category=EntityCategory.CONFIG,
+            native_step=1,
+            value_fn=lambda device: device.speed,
+            update_fn=lambda device, value: device.change_fan_speed(int(value)),
+            native_min_value=float(device.config_dict["levels"][0]),
+            native_max_value=float(device.config_dict["levels"][-1]),
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a change_fan_speed method."""
+        return hasattr(device, "change_fan_speed") and callable(device.change_fan_speed)
+
+
 class MistLevelEntityDescriptionFactory(
     VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription, VeSyncNumberEntity]
 ):
@@ -86,8 +109,33 @@ class MistLevelEntityDescriptionFactory(
         return "mist_virtual_level" in device.details
 
 
+class WarmMistLevelEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription, VeSyncNumberEntity]
+):
+    """Create an entity description for a device that supports warm mist levels."""
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
+        """Create a VeSyncNumberEntityDescription."""
+        return VeSyncNumberEntityDescription(
+            key="warm-mist-level",
+            name="Warm Mist Level",
+            entity_category=EntityCategory.CONFIG,
+            native_step=1,
+            value_fn=lambda device: device.details["warm_mist_level"],
+            update_fn=lambda device, value: device.set_warm_level(int(value)),
+            native_min_value=float(device.config_dict["warm_mist_levels"][0]),
+            native_max_value=float(device.config_dict["warm_mist_levels"][-1]),
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a mist_virtual_level property."""
+        return "warm_mist_level" in device.details
+
+
 _FACTORIES: list[VeSyncEntityDescriptionFactory] = [
+    FanSpeedEntityDescriptionFactory(),
     MistLevelEntityDescriptionFactory(),
+    WarmMistLevelEntityDescriptionFactory(),
 ]
 
 
