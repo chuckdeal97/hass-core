@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    BULB_MODEL,
     DIM_SWITCH_MODEL,
     FAN_MODEL,
     HUMIDIFIER_MODEL,
@@ -337,6 +338,32 @@ def humidifier_with_nightlight_fixture() -> VeSyncHumid200300S:
 def bulb_fixture():
     """Create a mock VeSync bulb fixture."""
     mock_fixture = Mock(VeSyncBulb)
+    mock_fixture.brightness = 100
+    mock_fixture.cid = "cid"
+    mock_fixture.current_firm_version = 0
+    mock_fixture.connection_status = "online"
+    mock_fixture.device_image = "device image"
+    mock_fixture.device_name = "device name"
+    mock_fixture.device_status = "on"
+    mock_fixture.device_type = BULB_MODEL
+    #    mock_fixture.is_dimmable = Mock(return_value=False)
+    mock_fixture.is_on = True
+    mock_fixture.set_brightness = Mock()
+    mock_fixture.set_color_temp = Mock()
+    mock_fixture.sub_device_no = 1
+    mock_fixture.turn_on = Mock()
+    mock_fixture.turn_off = Mock()
+    mock_fixture.update = Mock()
+    mock_fixture.uuid = "uuid"
+
+    config = {}
+    mock_fixture.config = config
+
+    config_dict = {}
+    mock_fixture.config_dict = config_dict
+
+    details = {}
+    mock_fixture.details = details
     return mock_fixture
 
 

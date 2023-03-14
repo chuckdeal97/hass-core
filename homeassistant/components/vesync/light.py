@@ -39,9 +39,12 @@ async def async_setup_entry(
             elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
                 entities.append(VeSyncTunableWhiteLightHA(dev))
             elif hasattr(dev, "night_light") and dev.night_light:
-                entities.append(VeSyncNightLightHA(dev))
+                if DEVICE_HELPER.is_air_purifier(dev.device_type):
+                    entities.append(VeSyncFanNightLightHA(dev))
+                else:
+                    entities.append(VeSyncNightLightHA(dev))
             else:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "%s - Unknown device type - %s", dev.device_name, dev.device_type
                 )
 
@@ -223,12 +226,7 @@ class VeSyncNightLightHA(VeSyncDimmableLightHA):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the night light on."""
-        if self.device.config_dict["module"] == "VeSyncAirBypass":
-            if ATTR_BRIGHTNESS in kwargs and kwargs[ATTR_BRIGHTNESS] < 255:
-                self.device.set_night_light("dim")
-            else:
-                self.device.set_night_light("on")
-        elif ATTR_BRIGHTNESS in kwargs:
+        if ATTR_BRIGHTNESS in kwargs:
             self.device.set_night_light_brightness(
                 _ha_brightness_to_vesync(kwargs[ATTR_BRIGHTNESS])
             )
@@ -237,7 +235,19 @@ class VeSyncNightLightHA(VeSyncDimmableLightHA):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the night light off."""
-        if self.device.config_dict["module"] == "VeSyncAirBypass":
-            self.device.set_night_light("off")
+        self.device.set_night_light_brightness(0)
+
+
+class VeSyncFanNightLightHA(VeSyncNightLightHA):
+    """Representation of the night light on a VeSync device."""
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the night light on."""
+        if ATTR_BRIGHTNESS in kwargs and kwargs[ATTR_BRIGHTNESS] < 255:
+            self.device.set_night_light("dim")
         else:
-            self.device.set_night_light_brightness(0)
+            self.device.set_night_light("on")
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the night light off."""
+        self.device.set_night_light("off")

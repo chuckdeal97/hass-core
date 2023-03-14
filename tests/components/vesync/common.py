@@ -7,6 +7,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import load_fixture
 
+BULB_MODEL = "BULB_MODEL"
 DIM_SWITCH_MODEL = "DIM_SWITCH_MODEL"
 FAN_MODEL = "FAN_MODEL"
 HUMIDIFIER_MODEL = "HUMIDIFIER_MODEL"
