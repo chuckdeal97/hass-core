@@ -68,6 +68,17 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 400s Fan Speed',
+          'max': 4.0,
+          'min': 1.0,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.air_purifier_400s_fan_speed',
+        'state': '1',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
           'friendly_name': 'Air Purifier 400s Air Quality',
         }),
         'entity_id': 'sensor.air_purifier_400s_air_quality',
@@ -144,6 +155,17 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 600s Fan Speed',
+          'max': 4.0,
+          'min': 1.0,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.air_purifier_600s_fan_speed',
+        'state': '1',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
           'friendly_name': 'Air Purifier 600s Air Quality',
         }),
         'entity_id': 'sensor.air_purifier_600s_air_quality',
@@ -202,6 +224,17 @@
       }),
       dict({
         'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 131s Fan Speed Level',
+          'max': 3,
+          'min': 1,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.air_purifier_131s_fan_speed_level',
+        'state': 'unavailable',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
           'friendly_name': 'Air Purifier 131s Air Quality',
         }),
         'entity_id': 'sensor.air_purifier_131s_air_quality',
@@ -246,6 +279,17 @@
         }),
         'entity_id': 'light.air_purifier_200s_night_light',
         'state': 'off',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Air Purifier 200s Fan Speed',
+          'max': 3.0,
+          'min': 1.0,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.air_purifier_200s_fan_speed',
+        'state': '1',
       }),
       dict({
         'attributes': ReadOnlyDict({
@@ -432,6 +476,17 @@
         }),
         'entity_id': 'number.humidifier_600s_mist_level',
         'state': '6',
+      }),
+      dict({
+        'attributes': ReadOnlyDict({
+          'friendly_name': 'Humidifier 600S Warm Mist Level',
+          'max': 3.0,
+          'min': 0.0,
+          'mode': <NumberMode.AUTO: 'auto'>,
+          'step': 1,
+        }),
+        'entity_id': 'number.humidifier_600s_warm_mist_level',
+        'state': '0',
       }),
       dict({
         'attributes': ReadOnlyDict({

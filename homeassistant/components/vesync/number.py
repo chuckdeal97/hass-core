@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncfan import VeSyncAir131
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -63,7 +64,7 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         self.entity_description.update_fn(self.device, value)
 
 
-class FanSpeedEntityDescriptionFactory(
+class FanLevelEntityDescriptionFactory(
     VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription, VeSyncNumberEntity]
 ):
     """Create an entity description for a device that supports fan speeds."""
@@ -75,6 +76,35 @@ class FanSpeedEntityDescriptionFactory(
             name="Fan Speed Level",
             entity_category=EntityCategory.CONFIG,
             native_step=1,
+            value_fn=lambda device: device.details["level"],
+            update_fn=lambda device, value: device.change_fan_speed(int(value)),
+            native_min_value=1,
+            native_max_value=3,
+        )
+
+    def supports(self, device: VeSyncBaseDevice) -> bool:
+        """Determine if this device supports a change_fan_speed method."""
+        return (
+            isinstance(device, VeSyncAir131)
+            and hasattr(device, "change_fan_speed")
+            and callable(device.change_fan_speed)
+            and hasattr(device, "details")
+            and "level" in device.details
+        )
+
+
+class FanSpeedEntityDescriptionFactory(
+    VeSyncEntityDescriptionFactory[VeSyncNumberEntityDescription, VeSyncNumberEntity]
+):
+    """Create an entity description for a device that supports fan speeds."""
+
+    def create(self, device: VeSyncBaseDevice) -> VeSyncNumberEntityDescription:
+        """Create a VeSyncNumberEntityDescription."""
+        return VeSyncNumberEntityDescription(
+            key="fan-speed",
+            name="Fan Speed",
+            entity_category=EntityCategory.CONFIG,
+            native_step=1,
             value_fn=lambda device: device.speed,
             update_fn=lambda device, value: device.change_fan_speed(int(value)),
             native_min_value=float(device.config_dict["levels"][0]),
@@ -83,7 +113,13 @@ class FanSpeedEntityDescriptionFactory(
 
     def supports(self, device: VeSyncBaseDevice) -> bool:
         """Determine if this device supports a change_fan_speed method."""
-        return hasattr(device, "change_fan_speed") and callable(device.change_fan_speed)
+        return (
+            hasattr(device, "change_fan_speed")
+            and callable(device.change_fan_speed)
+            and hasattr(device, "speed")
+            and hasattr(device, "config_dict")
+            and "levels" in device.config_dict
+        )
 
 
 class MistLevelEntityDescriptionFactory(
@@ -105,8 +141,8 @@ class MistLevelEntityDescriptionFactory(
         )
 
     def supports(self, device: VeSyncBaseDevice) -> bool:
-        """Determine if this device supports a mist_virtual_level property."""
-        return "mist_virtual_level" in device.details
+        """Determine if this device supports a set_mist_level method."""
+        return hasattr(device, "set_mist_level") and callable(device.set_mist_level)
 
 
 class WarmMistLevelEntityDescriptionFactory(
@@ -128,11 +164,12 @@ class WarmMistLevelEntityDescriptionFactory(
         )
 
     def supports(self, device: VeSyncBaseDevice) -> bool:
-        """Determine if this device supports a mist_virtual_level property."""
-        return "warm_mist_level" in device.details
+        """Determine if this device supports a warm mist method."""
+        return hasattr(device, "warm_mist_feature") and device.warm_mist_feature
 
 
 _FACTORIES: list[VeSyncEntityDescriptionFactory] = [
+    FanLevelEntityDescriptionFactory(),
     FanSpeedEntityDescriptionFactory(),
     MistLevelEntityDescriptionFactory(),
     WarmMistLevelEntityDescriptionFactory(),

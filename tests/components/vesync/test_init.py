@@ -164,7 +164,7 @@ async def test_asynch_setup_entry__loaded_state(
 
     identifier = "600s-humidifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 9
+    assert len(entities) == 10
     states[identifier] = get_states(hass, entities)
 
     assert states == snapshot(name="humidifiers")
@@ -173,22 +173,22 @@ async def test_asynch_setup_entry__loaded_state(
     states = {}
     identifier = "air-purifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 3
+    assert len(entities) == 4
     states[identifier] = get_states(hass, entities)
 
     identifier = "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 5
+    assert len(entities) == 6
     states[identifier] = get_states(hass, entities)
 
     identifier = "400s-purifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 7
+    assert len(entities) == 8
     states[identifier] = get_states(hass, entities)
 
     identifier = "600s-purifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 7
+    assert len(entities) == 8
     states[identifier] = get_states(hass, entities)
 
     assert states == snapshot(name="fans")
