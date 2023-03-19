@@ -28,14 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 MAX_HUMIDITY = 80
 MIN_HUMIDITY = 30
 
-PRESET_MODES = {
-    "Classic200S": [MODE_NORMAL, MODE_AUTO],
-    "Classic300S": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
-    "Dual200S": [MODE_NORMAL, MODE_AUTO],
-    "LV600S": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
-    "OASISMIST": [MODE_NORMAL, MODE_AUTO, MODE_SLEEP],
-}
-
 MODE_MAP = {
     "normal": MODE_NORMAL,
     "manual": MODE_NORMAL,
@@ -107,10 +99,12 @@ class VeSyncHumidifierHA(VeSyncDevice, HumidifierEntity):
         self._attr_min_humidity = MIN_HUMIDITY
         self._attr_max_humidity = MAX_HUMIDITY
 
-        if mode := MODE_MAP[humidifier.details["mode"]]:
+        if mode := MODE_MAP[DEVICE_HELPER.get_feature(humidifier, "details", "mode")]:
             self._attr_mode = mode
 
-        if mist_modes := humidifier.config_dict["mist_modes"]:
+        if mist_modes := DEVICE_HELPER.get_feature(
+            humidifier, "config_dict", "mist_modes"
+        ):
             self._attr_available_modes = [MODE_MAP[mmode] for mmode in mist_modes]
 
         self._attr_supported_features = HumidifierEntityFeature(0)
