@@ -63,7 +63,7 @@ class VeSyncBinarySensorEntity(VeSyncBaseEntity, BinarySensorEntity):
 
 class EmptyWaterTankEntityDescriptionFactory(
     VeSyncEntityDescriptionFactory[
-        VeSyncBinarySensorEntityDescription, VeSyncBinarySensorEntity
+        VeSyncBinarySensorEntityDescription, type[VeSyncBinarySensorEntity]
     ]
 ):
     """Create an entity description for a device that supports empty water tank sensor."""
@@ -87,7 +87,7 @@ class EmptyWaterTankEntityDescriptionFactory(
 
 class WaterTankLiftedEntityDescriptionFactory(
     VeSyncEntityDescriptionFactory[
-        VeSyncBinarySensorEntityDescription, VeSyncBinarySensorEntity
+        VeSyncBinarySensorEntityDescription, type[VeSyncBinarySensorEntity]
     ]
 ):
     """Create an entity description for a device that supports water tank lifted sensor."""
@@ -111,7 +111,7 @@ class WaterTankLiftedEntityDescriptionFactory(
 
 class HighHumidityEntityDescriptionFactory(
     VeSyncEntityDescriptionFactory[
-        VeSyncBinarySensorEntityDescription, VeSyncBinarySensorEntity
+        VeSyncBinarySensorEntityDescription, type[VeSyncBinarySensorEntity]
     ]
 ):
     """Create an entity description for a device that supports high humidity sensor."""

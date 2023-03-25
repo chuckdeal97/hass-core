@@ -240,15 +240,6 @@
         'entity_id': 'sensor.air_purifier_131s_air_quality',
         'state': 'unavailable',
       }),
-      dict({
-        'attributes': ReadOnlyDict({
-          'friendly_name': 'Air Purifier 131s Filter Life',
-          'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-          'unit_of_measurement': '%',
-        }),
-        'entity_id': 'sensor.air_purifier_131s_filter_life',
-        'state': 'unavailable',
-      }),
     ]),
     'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55': list([
       dict({
@@ -525,7 +516,7 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'power',
-          'friendly_name': 'Outlet current power',
+          'friendly_name': 'Outlet Current Power',
           'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
           'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
         }),
@@ -535,7 +526,7 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'voltage',
-          'friendly_name': 'Outlet current voltage',
+          'friendly_name': 'Outlet Current Voltage',
           'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
           'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
         }),
@@ -545,7 +536,7 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'energy',
-          'friendly_name': 'Outlet energy use monthly',
+          'friendly_name': 'Outlet Energy Use Monthly',
           'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -555,7 +546,7 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'energy',
-          'friendly_name': 'Outlet energy use today',
+          'friendly_name': 'Outlet Energy Use Today',
           'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -565,7 +556,7 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'energy',
-          'friendly_name': 'Outlet energy use weekly',
+          'friendly_name': 'Outlet Energy Use Weekly',
           'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -575,7 +566,7 @@
       dict({
         'attributes': ReadOnlyDict({
           'device_class': 'energy',
-          'friendly_name': 'Outlet energy use yearly',
+          'friendly_name': 'Outlet Energy Use Yearly',
           'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),

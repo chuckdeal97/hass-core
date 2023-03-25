@@ -173,7 +173,7 @@ async def test_asynch_setup_entry__loaded_state(
     states = {}
     identifier = "air-purifier"
     entities = get_entities(hass, identifier)
-    assert len(entities) == 4
+    assert len(entities) == 3
     states[identifier] = get_states(hass, entities)
 
     identifier = "asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55"

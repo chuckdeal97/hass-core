@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.vesync.common import (
     DOMAIN,
@@ -251,7 +252,7 @@ async def test_vesyncdevicehelper__reset_cache() -> None:
     assert helper.switch_models is None
 
 
-async def test_base_entity__init(base_device) -> None:
+async def test_base_entity__init(base_device: VeSyncBaseDevice) -> None:
     """Test the base entity constructor."""
     entity = VeSyncBaseEntity(base_device)
 
@@ -264,7 +265,7 @@ async def test_base_entity__init(base_device) -> None:
     assert entity.unique_id == "cid1"
 
 
-async def test_base_entity__base_unique_id(base_device) -> None:
+async def test_base_entity__base_unique_id(base_device: VeSyncBaseDevice) -> None:
     """Test the base entity base_unique_id impl."""
     entity = VeSyncBaseEntity(base_device)
 
@@ -273,14 +274,14 @@ async def test_base_entity__base_unique_id(base_device) -> None:
     assert entity.base_unique_id == "cid"
 
 
-async def test_base_entity__base_name(base_device) -> None:
+async def test_base_entity__base_name(base_device: VeSyncBaseDevice) -> None:
     """Test the base entity base_name impl."""
     entity = VeSyncBaseEntity(base_device)
 
     assert entity.base_name == "device name"
 
 
-async def test_base_entity__available(base_device) -> None:
+async def test_base_entity__available(base_device: VeSyncBaseDevice) -> None:
     """Test the base entity available impl."""
     entity = VeSyncBaseEntity(base_device)
 
@@ -289,7 +290,7 @@ async def test_base_entity__available(base_device) -> None:
     assert entity.available is False
 
 
-async def test_base_entity__device_info(base_device) -> None:
+async def test_base_entity__device_info(base_device: VeSyncBaseDevice) -> None:
     """Test the base entity device_info impl."""
     entity = VeSyncBaseEntity(base_device)
 
@@ -302,7 +303,7 @@ async def test_base_entity__device_info(base_device) -> None:
     assert device_info["sw_version"] == 0
 
 
-async def test_base_entity__update(base_device) -> None:
+async def test_base_entity__update(base_device: VeSyncBaseDevice) -> None:
     """Test the base entity update impl."""
     entity = VeSyncDevice(base_device)
 
@@ -311,14 +312,14 @@ async def test_base_entity__update(base_device) -> None:
     assert base_device.update.call_count == 1
 
 
-async def test_base_device__details(base_device) -> None:
+async def test_base_device__details(base_device: VeSyncBaseDevice) -> None:
     """Test the base device details impl."""
     device = VeSyncDevice(base_device)
 
     assert device.details == base_device.details
 
 
-async def test_base_device__is_on(base_device) -> None:
+async def test_base_device__is_on(base_device: VeSyncBaseDevice) -> None:
     """Test the base device is_on impl."""
     device = VeSyncDevice(base_device)
 
@@ -327,7 +328,7 @@ async def test_base_device__is_on(base_device) -> None:
     assert device.is_on is False
 
 
-async def test_base_device__turn_off(base_device) -> None:
+async def test_base_device__turn_off(base_device: VeSyncBaseDevice) -> None:
     """Test the base device turn_on impl."""
     device = VeSyncDevice(base_device)
 
