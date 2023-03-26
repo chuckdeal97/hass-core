@@ -160,13 +160,6 @@ def veync_base_device_fixture() -> VeSyncBaseDevice:
     return mock_fixture
 
 
-@pytest.fixture(name="bulb")
-def bulb_fixture():
-    """Create a mock VeSync bulb fixture."""
-    mock_fixture = Mock(VeSyncBulb)
-    return mock_fixture
-
-
 @pytest.fixture(name="fan")
 def fan_fixture() -> VeSyncAirBypass:
     """Create a mock VeSync fan fixture."""
@@ -296,6 +289,13 @@ def humidifier_with_nightlight_fixture() -> VeSyncHumid200300S:
     details["water_tank_lifted"] = True
     mock_fixture.details = details
 
+    return mock_fixture
+
+
+@pytest.fixture(name="bulb")
+def bulb_fixture():
+    """Create a mock VeSync bulb fixture."""
+    mock_fixture = Mock(VeSyncBulb)
     return mock_fixture
 
 
