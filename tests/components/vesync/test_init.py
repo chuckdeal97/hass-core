@@ -118,12 +118,12 @@ async def test_async_setup_entry__with_devices(
         assert setups_mock.call_args.args[0] == config_entry
         assert list(setups_mock.call_args.args[1]) == [
             Platform.SWITCH,
-            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
-            Platform.NUMBER,
             Platform.SENSOR,
+            Platform.NUMBER,
+            Platform.BINARY_SENSOR,
         ]
         assert register_mock.call_count == 1
         assert register_mock.call_args.args[0] == DOMAIN
