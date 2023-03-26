@@ -11,16 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
-from .const import (
-    DOMAIN,
-    VS_BINARY_SENSORS,
-    VS_FANS,
-    VS_HUMIDIFIERS,
-    VS_LIGHTS,
-    VS_NUMBERS,
-    VS_SENSORS,
-    VS_SWITCHES,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,55 +60,6 @@ class VeSyncDeviceHelper:
 
 
 DEVICE_HELPER = VeSyncDeviceHelper()
-
-
-async def async_process_devices(hass, manager):
-    """Assign devices to proper component."""
-    devices = {}
-    devices[VS_SWITCHES] = []
-    devices[VS_BINARY_SENSORS] = []
-    devices[VS_FANS] = []
-    devices[VS_HUMIDIFIERS] = []
-    devices[VS_NUMBERS] = []
-    devices[VS_LIGHTS] = []
-    devices[VS_SENSORS] = []
-
-    await hass.async_add_executor_job(manager.update)
-
-    if manager.fans:
-        for fan in manager.fans:
-            # VeSync classifies humidifiers as fans
-            if DEVICE_HELPER.is_humidifier(fan.device_type):
-                devices[VS_HUMIDIFIERS].append(fan)
-            else:
-                devices[VS_FANS].append(fan)
-            devices[VS_SWITCHES].append(fan)  # for automatic stop and display
-            devices[VS_LIGHTS].append(fan)  # for night light
-            devices[VS_SENSORS].append(fan)
-            devices[VS_NUMBERS].append(fan)  # for night light and mist level
-            devices[VS_BINARY_SENSORS].append(fan)
-        _LOGGER.info("%d VeSync fans found", len(devices[VS_FANS]))
-        _LOGGER.info("%d VeSync humidifiers found", len(devices[VS_HUMIDIFIERS]))
-
-    if manager.bulbs:
-        devices[VS_LIGHTS].extend(manager.bulbs)
-        _LOGGER.info("%d VeSync lights found", len(manager.bulbs))
-
-    if manager.outlets:
-        devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' voltage, power & energy usage as separate sensors
-        devices[VS_SENSORS].extend(manager.outlets)
-        _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
-
-    if manager.switches:
-        for switch in manager.switches:
-            if not switch.is_dimmable():
-                devices[VS_SWITCHES].append(switch)
-            else:
-                devices[VS_LIGHTS].append(switch)
-        _LOGGER.info("%d VeSync switches found", len(manager.switches))
-
-    return devices
 
 
 class VeSyncBaseEntity(Entity):
