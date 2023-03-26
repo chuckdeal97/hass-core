@@ -111,7 +111,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def _async_process_devices(hass: HomeAssistant, manager: VeSync):
+async def _async_process_devices(
+    hass: HomeAssistant, manager: VeSync
+) -> dict[str, list]:
     """Assign devices to proper component."""
     devices: dict[str, list] = {}
     devices[VS_SWITCHES] = []
