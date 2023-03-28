@@ -11,6 +11,7 @@ from homeassistant.components.vesync import (
     _async_new_device_discovery,
     _async_process_devices,
     async_setup_entry,
+    async_unload_entry,
 )
 from homeassistant.components.vesync.const import (
     DOMAIN,
@@ -41,8 +42,6 @@ async def test_async_setup_entry__not_login(
     manager.login = Mock(return_value=False)
 
     with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
         hass.config_entries, "async_forward_entry_setup"
     ) as setup_mock, patch(
         "homeassistant.components.vesync._async_process_devices"
@@ -51,7 +50,6 @@ async def test_async_setup_entry__not_login(
     ) as register_mock:
         assert not await async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
-        assert setups_mock.call_count == 0
         assert setup_mock.call_count == 0
         assert process_mock.call_count == 0
         assert register_mock.call_count == 0
@@ -65,17 +63,10 @@ async def test_async_setup_entry__no_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
 ) -> None:
     """Test setup connects to vesync and creates empty config when no devices."""
-    with patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
-        hass.config_entries, "async_forward_entry_setup"
-    ) as setup_mock:
+    with patch.object(hass.config_entries, "async_forward_entry_setup") as setup_mock:
         assert await async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert setups_mock.call_count == 1
-        assert setups_mock.call_args.args[0] == config_entry
-        assert setups_mock.call_args.args[1] == []
         assert setup_mock.call_count == 0
 
     assert manager.login.call_count == 1
@@ -101,8 +92,8 @@ async def test_async_setup_entry__with_devices(
         "async_add_executor_job",
         new=AsyncMock(),
     ) as mock_add_executor_job, patch.object(
-        hass.config_entries, "async_forward_entry_setups"
-    ) as setups_mock, patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as setup_mock, patch.object(
         hass.services, "async_register"
     ) as register_mock, patch(
         "homeassistant.components.vesync.common.humid_features"
@@ -119,17 +110,14 @@ async def test_async_setup_entry__with_devices(
             call(manager_devices.login),
             call(manager_devices.update),
         ]
-        assert setups_mock.call_count == 1
-        assert setups_mock.call_args.args[0] == config_entry
-        assert list(setups_mock.call_args.args[1]) == [
-            Platform.SWITCH,
-            Platform.FAN,
-            Platform.HUMIDIFIER,
-            Platform.LIGHT,
-            Platform.SENSOR,
-            Platform.NUMBER,
-            Platform.BINARY_SENSOR,
-        ]
+        assert setup_mock.call_count == 7
+        assert setup_mock.mock_calls[0] == call(config_entry, Platform.BINARY_SENSOR)
+        assert setup_mock.mock_calls[1] == call(config_entry, Platform.FAN)
+        assert setup_mock.mock_calls[2] == call(config_entry, Platform.HUMIDIFIER)
+        assert setup_mock.mock_calls[3] == call(config_entry, Platform.LIGHT)
+        assert setup_mock.mock_calls[4] == call(config_entry, Platform.NUMBER)
+        assert setup_mock.mock_calls[5] == call(config_entry, Platform.SENSOR)
+        assert setup_mock.mock_calls[6] == call(config_entry, Platform.SWITCH)
         assert register_mock.call_count == 1
         assert register_mock.call_args.args[0] == DOMAIN
         assert register_mock.call_args.args[1] == SERVICE_UPDATE_DEVS
@@ -412,13 +400,13 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
         assert mock_forward_setup.call_count == 7
         mock_forward_setup.assert_has_calls(
             [
-                call(config_entry, Platform.SWITCH),
+                call(config_entry, Platform.BINARY_SENSOR),
                 call(config_entry, Platform.FAN),
-                call(config_entry, Platform.LIGHT),
                 call(config_entry, Platform.HUMIDIFIER),
+                call(config_entry, Platform.LIGHT),
                 call(config_entry, Platform.NUMBER),
                 call(config_entry, Platform.SENSOR),
-                call(config_entry, Platform.BINARY_SENSOR),
+                call(config_entry, Platform.SWITCH),
             ]
         )
         mock_service.assert_not_called()
@@ -521,19 +509,19 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
         assert mock_dispatcher_send.call_count == 7
         assert mock_dispatcher_send.mock_calls[0] == call(
             hass,
-            "vesync_discovery_switches",
-            unordered([fan, humidifier1, humidifier2, outlet, switch]),
+            "vesync_discovery_binary_sensors",
+            unordered([fan, humidifier1, humidifier2]),
         )
         assert mock_dispatcher_send.mock_calls[1] == call(
             hass, "vesync_discovery_fans", unordered([fan])
         )
         assert mock_dispatcher_send.mock_calls[2] == call(
+            hass, "vesync_discovery_humidifiers", unordered([humidifier1, humidifier2])
+        )
+        assert mock_dispatcher_send.mock_calls[3] == call(
             hass,
             "vesync_discovery_lights",
             unordered([fan, humidifier1, humidifier2, bulb, light]),
-        )
-        assert mock_dispatcher_send.mock_calls[3] == call(
-            hass, "vesync_discovery_humidifiers", unordered([humidifier1, humidifier2])
         )
         assert mock_dispatcher_send.mock_calls[4] == call(
             hass, "vesync_discovery_numbers", unordered([fan, humidifier1, humidifier2])
@@ -545,8 +533,8 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
         )
         assert mock_dispatcher_send.mock_calls[6] == call(
             hass,
-            "vesync_discovery_binary_sensors",
-            unordered([fan, humidifier1, humidifier2]),
+            "vesync_discovery_switches",
+            unordered([fan, humidifier1, humidifier2, outlet, switch]),
         )
         assert mock_create_task.call_count == 0
         assert mock_forward_setup.call_count == 0
@@ -585,3 +573,57 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
     assert caplog.messages[2] == "1 VeSync lights found"
     assert caplog.messages[3] == "1 VeSync outlets found"
     assert caplog.messages[4] == "2 VeSync switches found"
+
+
+async def test_async_unload_entry__not_ok(hass: HomeAssistant, config_entry) -> None:
+    """Test async_unload_entry when unload not ok."""
+    hass.data[DOMAIN] = {"stuff": "more stuff"}
+    assert DOMAIN in hass.data
+
+    with patch.object(hass.config_entries, "async_unload_platforms") as unload_mock:
+        unload_mock.return_value = False
+
+        assert not await async_unload_entry(hass, config_entry)
+        await hass.async_block_till_done()
+
+        assert unload_mock.call_count == 1
+        assert unload_mock.mock_calls[0] == call(
+            config_entry,
+            [
+                Platform.BINARY_SENSOR,
+                Platform.FAN,
+                Platform.HUMIDIFIER,
+                Platform.LIGHT,
+                Platform.NUMBER,
+                Platform.SENSOR,
+                Platform.SWITCH,
+            ],
+        )
+    assert DOMAIN in hass.data
+
+
+async def test_async_unload_entry__ok(hass: HomeAssistant, config_entry) -> None:
+    """Test async_unload_entry when unload ok."""
+    hass.data[DOMAIN] = {"stuff": "more stuff"}
+    assert DOMAIN in hass.data
+
+    with patch.object(hass.config_entries, "async_unload_platforms") as unload_mock:
+        unload_mock.return_value = True
+
+        assert await async_unload_entry(hass, config_entry)
+        await hass.async_block_till_done()
+
+        assert unload_mock.call_count == 1
+        assert unload_mock.mock_calls[0] == call(
+            config_entry,
+            [
+                Platform.BINARY_SENSOR,
+                Platform.FAN,
+                Platform.HUMIDIFIER,
+                Platform.LIGHT,
+                Platform.NUMBER,
+                Platform.SENSOR,
+                Platform.SWITCH,
+            ],
+        )
+    assert DOMAIN in hass.data
