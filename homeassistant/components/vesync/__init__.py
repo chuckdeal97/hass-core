@@ -51,13 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     forward_setup = hass.config_entries.async_forward_entry_setup
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
 
     for platform, domain in PLATFORMS.items():
-        hass.data[DOMAIN][domain] = []
+        hass.data[DOMAIN][config_entry.entry_id][domain] = []
         if device_dict[domain]:
-            hass.data[DOMAIN][domain].extend(device_dict[domain])
+            hass.data[DOMAIN][config_entry.entry_id][domain].extend(device_dict[domain])
             hass.async_create_task(
                 forward_setup(config_entry, platform),
                 name=f"config entry forward setup {config_entry.title} {config_entry.domain} {config_entry.entry_id} {platform}",
@@ -81,12 +81,12 @@ async def _async_new_device_discovery(
     service: ServiceCall,
 ) -> None:
     """Discover if new devices should be added."""
-    manager = hass.data[DOMAIN][VS_MANAGER]
+    manager = hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER]
     dev_dict = await _async_process_devices(hass, manager)
 
     def _add_new_devices(platform: str, domain: str) -> None:
         """Add new devices to hass."""
-        old_devices = hass.data[DOMAIN][domain]
+        old_devices = hass.data[DOMAIN][config_entry.entry_id][domain]
         if new_devices := list(set(dev_dict.get(domain, [])).difference(old_devices)):
             if old_devices:
                 # must do assignment here to prevent changing the list before using as conditional

@@ -66,11 +66,11 @@ async def test_async_setup_entry__no_devices(
         assert setup_mock.call_count == 0
 
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_FANS]
-    assert not hass.data[DOMAIN][VS_LIGHTS]
-    assert not hass.data[DOMAIN][VS_SENSORS]
-    assert not hass.data[DOMAIN][VS_SWITCHES]
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] == manager
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_FANS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]
+    assert not hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]
 
 
 async def test_async_setup_entry__with_devices(
@@ -107,11 +107,11 @@ async def test_async_setup_entry__with_devices(
         assert register_mock.call_args.args[1] == SERVICE_UPDATE_DEVS
         assert callable(register_mock.call_args.args[2])
 
-    assert hass.data[DOMAIN][VS_MANAGER] == manager_devices
-    assert len(hass.data[DOMAIN][VS_FANS]) == 1
-    assert len(hass.data[DOMAIN][VS_LIGHTS]) == 2
-    assert len(hass.data[DOMAIN][VS_SENSORS]) == 2
-    assert len(hass.data[DOMAIN][VS_SWITCHES]) == 2
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] == manager_devices
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_FANS]) == 1
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]) == 2
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]) == 2
+    assert len(hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]) == 2
 
 
 async def test_async_process_devices__no_devices(
@@ -185,12 +185,12 @@ async def test_async_new_device_discovery__no_devices(
     """Test when manager with no devices is discovered."""
     manager = MagicMock()
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-    hass.data[DOMAIN][VS_FANS]: list = []
-    hass.data[DOMAIN][VS_LIGHTS]: list = []
-    hass.data[DOMAIN][VS_SENSORS]: list = []
-    hass.data[DOMAIN][VS_SWITCHES]: list = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]: list = []
 
     mock_forward_setup = Mock()
     mock_service = Mock()
@@ -236,12 +236,12 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
     light.is_dimmable.return_value = True
     manager.switches = [switch, light]
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-    hass.data[DOMAIN][VS_FANS]: list = []
-    hass.data[DOMAIN][VS_LIGHTS]: list = []
-    hass.data[DOMAIN][VS_SENSORS]: list = []
-    hass.data[DOMAIN][VS_SWITCHES]: list = []
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]: list = []
+    hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]: list = []
 
     mock_forward_setup = Mock()
     mock_service = Mock()
@@ -270,10 +270,16 @@ async def test_async_new_device_discovery__start_empty_discover_devices(
         )
         mock_service.assert_not_called()
 
-    assert hass.data[DOMAIN][VS_FANS] == unordered([fan])
-    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([bulb, light])
-    assert hass.data[DOMAIN][VS_SENSORS] == unordered([fan, outlet])
-    assert hass.data[DOMAIN][VS_SWITCHES] == unordered([outlet, switch])
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_FANS] == unordered([fan])
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS] == unordered(
+        [bulb, light]
+    )
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS] == unordered(
+        [fan, outlet]
+    )
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES] == unordered(
+        [outlet, switch]
+    )
 
     assert caplog.messages[0] == "1 VeSync fans found"
     assert caplog.messages[1] == "1 VeSync lights found"
@@ -314,12 +320,12 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
     light2.is_dimmable.return_value = True
     manager.switches = [switch, light]
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-    hass.data[DOMAIN][VS_FANS]: list = [fan2]
-    hass.data[DOMAIN][VS_LIGHTS]: list = [bulb2, light2]
-    hass.data[DOMAIN][VS_SENSORS]: list = [outlet2]
-    hass.data[DOMAIN][VS_SWITCHES]: list = [switch2]
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    hass.data[DOMAIN][config_entry.entry_id][VS_MANAGER] = manager
+    hass.data[DOMAIN][config_entry.entry_id][VS_FANS]: list = [fan2]
+    hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS]: list = [bulb2, light2]
+    hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS]: list = [outlet2]
+    hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES]: list = [switch2]
 
     mock_forward_setup = Mock()
     mock_service = Mock()
@@ -358,10 +364,16 @@ async def test_async_new_device_discovery__start_devices_discover_devices(
         assert mock_forward_setup.call_count == 0
         mock_service.assert_not_called()
 
-    assert hass.data[DOMAIN][VS_FANS] == unordered([fan, fan2])
-    assert hass.data[DOMAIN][VS_LIGHTS] == unordered([bulb, bulb2, light, light2])
-    assert hass.data[DOMAIN][VS_SENSORS] == unordered([fan, outlet, outlet2])
-    assert hass.data[DOMAIN][VS_SWITCHES] == unordered([outlet, switch, switch2])
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_FANS] == unordered([fan, fan2])
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_LIGHTS] == unordered(
+        [bulb, bulb2, light, light2]
+    )
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS] == unordered(
+        [fan, outlet, outlet2]
+    )
+    assert hass.data[DOMAIN][config_entry.entry_id][VS_SWITCHES] == unordered(
+        [outlet, switch, switch2]
+    )
 
     assert caplog.messages[0] == "1 VeSync fans found"
     assert caplog.messages[1] == "1 VeSync lights found"
