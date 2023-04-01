@@ -1,12 +1,41 @@
 """Tests for VeSync common utilities."""
+from unittest.mock import MagicMock
+
+import pytest
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.vesync.common import (
     DOMAIN,
     VeSyncBaseEntity,
     VeSyncDevice,
+    get_domain_data,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+
+
+async def test_get_domain_data(
+    hass: HomeAssistant,
+    config_entry,
+) -> None:
+    """Test helper get_feature."""
+    assert not hasattr(hass.data, DOMAIN)
+    assert get_domain_data(hass, config_entry, "domain") is None
+
+    hass.data[DOMAIN] = {}
+    assert get_domain_data(hass, config_entry, "domain") is None
+
+    hass.data[DOMAIN] = {config_entry.entry_id: {}}
+    with pytest.raises(KeyError) as ex_info:
+        get_domain_data(hass, config_entry, "domain")
+    assert ex_info.value.args[0] == "domain"
+
+    hass.data[DOMAIN] = {config_entry.entry_id: {"domain": []}}
+    assert get_domain_data(hass, config_entry, "domain") == []
+
+    mock_device = MagicMock()
+    hass.data[DOMAIN] = {config_entry.entry_id: {"domain": [mock_device]}}
+    assert get_domain_data(hass, config_entry, "domain") == [mock_device]
 
 
 async def test_base_entity__init(base_device: VeSyncBaseDevice) -> None:

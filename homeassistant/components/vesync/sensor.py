@@ -29,8 +29,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import VeSyncBaseEntity
-from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
+from .common import VeSyncBaseEntity, get_domain_data
+from .const import DEV_TYPE_TO_HA, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,9 +180,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
     )
 
-    _setup_entities(
-        hass.data[DOMAIN][config_entry.entry_id][VS_SENSORS], async_add_entities
-    )
+    _setup_entities(get_domain_data(hass, config_entry, VS_SENSORS), async_add_entities)
 
 
 @callback

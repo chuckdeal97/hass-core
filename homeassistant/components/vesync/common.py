@@ -4,11 +4,21 @@ from typing import Any
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_domain_data(hass: HomeAssistant, config_entry: ConfigEntry, key: str) -> Any:
+    """Get value of this domain's data."""
+    # This function is used to obscure the internal structure of where the data is stored
+    if DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]:
+        return hass.data[DOMAIN][config_entry.entry_id][key]
+    return None
 
 
 class VeSyncBaseEntity(Entity):
