@@ -74,14 +74,14 @@ async def async_setup_entry(
 class VeSyncFanHA(VeSyncDevice, FanEntity):
     """Representation of a VeSync fan."""
 
+    device: VeSyncAirBypass
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
     _attr_name = None
-    device: VeSyncAirBypass
 
     def __init__(self, fan) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan)
-        self._attr_supported_features = FanEntityFeature.SET_SPEED
+        self.device = fan
 
     @property
     def percentage(self) -> int | None:

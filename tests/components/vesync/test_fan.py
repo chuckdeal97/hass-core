@@ -1,20 +1,13 @@
 """Tests for the fan module."""
-import pytest
-import requests_mock
-from syrupy import SnapshotAssertion
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from pyvesync.vesyncfan import VeSyncAirBypass
+import requests_mock
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.fan import (
-    ATTR_PERCENTAGE,
-    ATTR_PERCENTAGE_STEP,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
-    DOMAIN as FAN_DOMAIN,
-    FanEntityFeature,
-)
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, FanEntityFeature
 from homeassistant.components.vesync.fan import (
     DOMAIN,
     FAN_MODE_AUTO,
@@ -23,12 +16,9 @@ from homeassistant.components.vesync.fan import (
     VeSyncFanHA,
     async_setup_entry,
 )
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.humidifier import MODE_AUTO, MODE_SLEEP
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES, STATE_ON
 
 from .common import ALL_DEVICE_NAMES, mock_devices_response
 
@@ -71,21 +61,6 @@ async def test_fan_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
-
-
-async def test_attributes_air_purifier(hass, setup_platform):
-    """Test the air purifier attributes are correct."""
-    state = hass.states.get("fan.air_purifier_400s")
-    assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_PERCENTAGE) == 25
-    assert state.attributes.get(ATTR_PERCENTAGE_STEP) == 25
-    assert state.attributes.get(ATTR_PRESET_MODE) is None
-    assert state.attributes.get(ATTR_PRESET_MODES) == [
-        MODE_AUTO,
-        MODE_SLEEP,
-    ]
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Air Purifier 400s"
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == FanEntityFeature.SET_SPEED
 
 
 async def test_async_setup_entry(
@@ -169,10 +144,13 @@ async def test_fan_entity__init(fan: VeSyncAirBypass) -> None:
     assert entity.entity_category is None
     assert hasattr(entity, "entity_description") is False
     assert entity.entity_picture is None
-    assert entity.has_entity_name is False
+    assert entity.has_entity_name is True
     assert entity.icon is None
-    assert entity.name == "device name"
-    assert entity.supported_features == FanEntityFeature.SET_SPEED
+    assert entity.name is None
+    assert (
+        entity.supported_features
+        == FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    )
     assert entity.unique_id == "cid1"
 
 

@@ -418,17 +418,108 @@
 # ---
 # name: test_fan_state[Humidifier 200s][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '200s-humidifier',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'VeSync',
+      'model': 'Classic200S',
+      'name': 'Humidifier 200s',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_fan_state[Humidifier 200s][entities]
   list([
   ])
 # ---
-# name: test_fan_state[Humidifier 600S][devices]
+# name: test_fan_state[Humidifier 300s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '300s-humidifier',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A601S-WUSB',
+      'name': 'Humidifier 300s',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Humidifier 300s][entities]
   list([
   ])
 # ---
+# name: test_fan_state[Humidifier 600S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '600s-humidifier',
+        ),
+      }),
+      'is_new': False,
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A602S-WUS',
+      'name': 'Humidifier 600S',
+      'name_by_user': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
 # name: test_fan_state[Humidifier 600S][entities]
+  list([
+  ])
+# ---
+# name: test_fan_state[Multicolor Light][devices]
+  list([
+  ])
+# ---
+# name: test_fan_state[Multicolor Light][entities]
   list([
   ])
 # ---

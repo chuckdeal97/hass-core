@@ -1,17 +1,11 @@
 """Common methods used across tests for VeSync."""
 import json
 
-from homeassistant.components.vesync.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from homeassistant.components.vesync.const import DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-
 import requests_mock
 
 from homeassistant.components.vesync.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import load_fixture, load_json_object_fixture
 
@@ -21,6 +15,9 @@ ALL_DEVICE_NAMES: list[str] = [
 ]
 DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 200s": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+    ],
+    "Humidifier 300s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
     "Humidifier 600S": [
@@ -39,6 +36,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
     "Dimmable Light": [
+        ("post", "/SmartBulb/v1/device/devicedetail", "device-detail.json")
+    ],
+    "Multicolor Light": [
         ("post", "/SmartBulb/v1/device/devicedetail", "device-detail.json")
     ],
     "Temperature Light": [
